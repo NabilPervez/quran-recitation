@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Al-Fatiha Recite',
-  description: 'A Quran Memorization Tool for Converts',
+  title: 'Ayah Echo',
+  description: 'A Quran Memorization Tool',
 };
 
 export default function RootLayout({

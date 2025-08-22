@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { surahs } from "@/lib/surahs";
 import { transliterate } from "@/lib/transliteration";
@@ -125,7 +126,9 @@ const PlayerControls: FC<{
   onPrevious: () => void;
   onRepeat: () => void;
   onSettingsChange: (newSettings: Partial<SessionSettings>) => void;
-}> = ({ playerState, settings, onPlayPause, onNext, onPrevious, onRepeat, onSettingsChange }) => (
+  isAutoplayEnabled: boolean;
+  onAutoplayChange: (enabled: boolean) => void;
+}> = ({ playerState, settings, onPlayPause, onNext, onPrevious, onRepeat, onSettingsChange, isAutoplayEnabled, onAutoplayChange }) => (
   <div className="flex flex-col items-center gap-6 w-full max-w-md">
     <div className="flex items-center justify-center gap-4">
        <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === 1 && playerState.currentSurahRep === 1}>
@@ -145,6 +148,10 @@ const PlayerControls: FC<{
       </Button>
     </div>
     <div className="flex items-center justify-center gap-8 w-full text-center">
+        <div className="flex items-center gap-2">
+            <Label htmlFor="autoplay-switch" className="text-muted-foreground text-sm">Autoplay</Label>
+            <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} />
+        </div>
         <div className="flex items-center gap-2">
             <Button onClick={() => onSettingsChange({ ayahReps: Math.max(1, settings.ayahReps - 1)})} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
             <span className="text-muted-foreground text-sm whitespace-nowrap">Ayah: {playerState.currentAyahRep} / {settings.ayahReps}</span>
@@ -176,6 +183,7 @@ export default function Home() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isDisplayVisible, setIsDisplayVisible] = useState(true);
+  const [isAutoplayEnabled, setIsAutoplayEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionStartTime = useRef<Date | null>(null);
   const [sessionTime, setSessionTime] = useState(0);
@@ -254,12 +262,20 @@ export default function Home() {
   const handleAudioEnd = useCallback(() => {
     if (!settings) return;
 
-    if (playerState.currentAyahRep < settings.ayahReps) {
-      setPlayerState(prev => ({ ...prev, currentAyahRep: prev.currentAyahRep + 1 }));
+    const playNext = () => {
+      if (playerState.currentAyahRep < settings.ayahReps) {
+        setPlayerState(prev => ({ ...prev, currentAyahRep: prev.currentAyahRep + 1 }));
+      } else {
+        advanceToNext();
+      }
+    };
+
+    if (isAutoplayEnabled) {
+      setTimeout(playNext, 1000); // 1-second pause
     } else {
-      advanceToNext();
+      setPlayerState(prev => ({...prev, isPlaying: false}));
     }
-  }, [settings, playerState.currentAyahRep, advanceToNext]);
+  }, [settings, playerState.currentAyahRep, advanceToNext, isAutoplayEnabled]);
 
   // Effect for fetching Ayah data
   useEffect(() => {
@@ -307,13 +323,13 @@ export default function Home() {
   
   // Effect for handling automatic repetition playback
   useEffect(() => {
-    if (playerState.isPlaying && audioRef.current && !isLoading && audioSrc) {
+    if (playerState.isPlaying && audioRef.current && !isLoading && audioSrc && isAutoplayEnabled) {
         if(playerState.currentAyahRep > 1) { // Only auto-replay on subsequent reps
             audioRef.current.currentTime = 0;
             audioRef.current.play().catch(e => console.error("Audio replay error:", e));
         }
     }
-  }, [playerState.currentAyahRep, playerState.isPlaying, isLoading, audioSrc]);
+  }, [playerState.currentAyahRep, playerState.isPlaying, isLoading, audioSrc, isAutoplayEnabled]);
 
 
   const handleStartSession = (newSettings: SessionSettings) => {
@@ -348,12 +364,14 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 space-y-8 bg-background font-body">
-      <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary-foreground tracking-tight">
-          Al-Fatiha Recite
-        </h1>
-        <p className="text-muted-foreground text-lg mt-2">A Quran Memorization Tool for Converts</p>
-      </div>
+     {!isSessionActive && (
+        <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary-foreground tracking-tight">
+            Ayah Echo
+            </h1>
+            <p className="text-muted-foreground text-lg mt-2">Quran Memorization Tool</p>
+        </div>
+     )}
 
       {!isSessionActive ? (
         <SettingsForm onStart={handleStartSession} isSessionActive={isSessionActive} />
@@ -377,6 +395,8 @@ export default function Home() {
                 onPrevious={handlePreviousAyah}
                 onRepeat={handleRepeatAyah}
                 onSettingsChange={handleSettingsChange}
+                isAutoplayEnabled={isAutoplayEnabled}
+                onAutoplayChange={setIsAutoplayEnabled}
               />
               <Button onClick={handleSessionEnd} variant="destructive" className="mt-4">
                 End Session
@@ -394,7 +414,7 @@ export default function Home() {
           onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
           onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
           onCanPlayThrough={() => {
-              if (playerState.isPlaying) {
+              if (playerState.isPlaying && isAutoplayEnabled) {
                   audioRef.current?.play().catch(e => console.error("Autoplay error:", e));
               }
           }}
