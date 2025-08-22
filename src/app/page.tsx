@@ -171,7 +171,7 @@ export default function Home() {
     isPlaying: false,
   });
   const [ayahData, setAyahData] = useState<AyahData | null>(null);
-  const [audioSrc, setAudioSrc] = useState<string>("");
+  const [audioSrc, setAudioSrc] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -213,7 +213,7 @@ export default function Home() {
     setPlayerState(prev => ({ ...prev, isPlaying: false }));
     setSettings(null);
     setAyahData(null);
-    setAudioSrc("");
+    setAudioSrc(null);
     setIsSummaryOpen(true);
   }, []);
 
@@ -386,18 +386,20 @@ export default function Home() {
         </>
       )}
 
-      <audio
-        ref={audioRef}
-        src={audioSrc}
-        onEnded={handleAudioEnd}
-        onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
-        onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
-        onCanPlayThrough={() => {
-            if (playerState.isPlaying) {
-                audioRef.current?.play().catch(e => console.error("Autoplay error:", e));
-            }
-        }}
-      />
+      {audioSrc && (
+        <audio
+          ref={audioRef}
+          src={audioSrc}
+          onEnded={handleAudioEnd}
+          onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
+          onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
+          onCanPlayThrough={() => {
+              if (playerState.isPlaying) {
+                  audioRef.current?.play().catch(e => console.error("Autoplay error:", e));
+              }
+          }}
+        />
+      )}
 
       <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
         <AlertDialogContent>
