@@ -1,12 +1,10 @@
 "use client";
 
-import { trackMemorizationProgress, type TrackMemorizationProgressOutput } from "@/ai/flows/ai-powered-progress-tracking";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { surahs } from "@/lib/surahs";
@@ -154,53 +152,6 @@ const PlayerControls: FC<{
   </div>
 );
 
-const AIFeedbackDisplay: FC<{ feedback: TrackMemorizationProgressOutput | null }> = ({ feedback }) => {
-  if (!feedback) return null;
-
-  return (
-    <Card className="w-full max-w-2xl shadow-lg border-accent/20">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl text-accent-foreground flex items-center gap-2">
-            <ChevronsRight className="text-accent"/>
-            AI-Powered Feedback
-        </CardTitle>
-        <CardDescription>Personalized tips to enhance your memorization.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <Label>Overall Progress</Label>
-          <Progress value={feedback.progressPercentage} className="w-full h-3 bg-primary/20 [&>div]:bg-accent" />
-          <p className="text-sm text-right text-muted-foreground mt-1">{feedback.progressPercentage}%</p>
-        </div>
-
-        {feedback.difficultVerses && feedback.difficultVerses.length > 0 && (
-          <div>
-            <h4 className="font-semibold text-lg mb-2">Focus Ayahs</h4>
-            <div className="flex flex-wrap gap-2">
-              {feedback.difficultVerses.map(ayah => (
-                <span key={ayah} className="py-1 px-3 bg-primary/20 text-primary-foreground rounded-full text-sm">
-                  Ayah {ayah}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {feedback.recommendedStrategies && feedback.recommendedStrategies.length > 0 && (
-          <div>
-            <h4 className="font-semibold text-lg mb-2">Recommended Strategies</h4>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              {feedback.recommendedStrategies.map((strategy, index) => (
-                <li key={index}>{strategy}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
 
 // --- Main Page Component ---
 
@@ -214,7 +165,6 @@ export default function Home() {
     errorCount: 0,
   });
   const [ayahData, setAyahData] = useState<AyahData | null>(null);
-  const [aiFeedback, setAIFeedback] = useState<TrackMemorizationProgressOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -235,32 +185,8 @@ export default function Home() {
     setIsSummaryOpen(true);
   }, []);
 
-  const getAIFeedback = useCallback(async () => {
-    if (!settings) return;
-
-    try {
-      const feedback = await trackMemorizationProgress({
-        userId: "user-alfatiha-123",
-        surahNo: settings.surah.id,
-        ayahNo: playerState.currentAyah,
-        repetitionCount: playerState.currentAyahRep,
-        errorRate: playerState.currentAyahRep > 0 ? playerState.errorCount / playerState.currentAyahRep : 0,
-      });
-      setAIFeedback(feedback);
-    } catch (error) {
-      console.error("AI feedback error:", error);
-      toast({
-        variant: "destructive",
-        title: "AI Error",
-        description: "Could not get feedback from the AI assistant.",
-      });
-    }
-  }, [settings, playerState, toast]);
-
   const advanceToNext = useCallback(() => {
     if (!settings) return;
-
-    getAIFeedback();
 
     let nextAyah = playerState.currentAyah + 1;
     let nextSurahRep = playerState.currentSurahRep;
@@ -281,7 +207,7 @@ export default function Home() {
       currentAyahRep: 1,
       errorCount: 0,
     }));
-  }, [settings, playerState, handleSessionEnd, getAIFeedback]);
+  }, [settings, playerState, handleSessionEnd]);
 
 
   const handleNextAyah = () => {
@@ -381,7 +307,6 @@ export default function Home() {
       isPlaying: true, // Auto-play on start
       errorCount: 0,
     });
-    setAIFeedback(null);
     setIsSessionActive(true);
     sessionStartTime.current = new Date();
     setSessionTime(0);
@@ -432,16 +357,15 @@ export default function Home() {
           {!isLoading && ayahData && (
             <>
               <AyahDisplay data={ayahData} />
-              <PlayerControls 
-                playerState={playerState} 
-                settings={settings!} 
-                onPlayPause={handlePlayPause} 
+              <PlayerControls
+                playerState={playerState}
+                settings={settings!}
+                onPlayPause={handlePlayPause}
                 onMistake={handleMistake}
                 onNext={handleNextAyah}
                 onPrevious={handlePreviousAyah}
                 onRepeat={handleRepeatAyah}
               />
-              <AIFeedbackDisplay feedback={aiFeedback} />
               <Button onClick={handleSessionEnd} variant="destructive" className="mt-4">
                 End Session
               </Button>
@@ -451,7 +375,7 @@ export default function Home() {
       )}
 
       {ayahData && <audio ref={audioRef} src={ayahData.audio["1"]} onEnded={handleAudioEnd} />}
-      
+
       <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
