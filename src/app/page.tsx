@@ -1,6 +1,7 @@
 "use client";
 
 import { trackMemorizationProgress, type TrackMemorizationProgressOutput } from "@/ai/flows/ai-powered-progress-tracking";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { surahs } from "@/lib/surahs";
 import { transliterate } from "@/lib/transliteration";
 import type { AyahData, SurahInfo } from "@/types";
-import { ChevronsRight, Loader2, Pause, Play, Repeat, Repeat1, Volume2, XCircle } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Loader2, Pause, Play, Repeat, Repeat1, XCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
 
 type SessionSettings = {
@@ -117,17 +118,26 @@ const PlayerControls: FC<{
   settings: SessionSettings;
   onPlayPause: () => void;
   onMistake: () => void;
-}> = ({ playerState, settings, onPlayPause, onMistake }) => (
+  onNext: () => void;
+  onPrevious: () => void;
+  onRepeat: () => void;
+}> = ({ playerState, settings, onPlayPause, onMistake, onNext, onPrevious, onRepeat }) => (
   <div className="flex flex-col items-center gap-4 w-full max-w-md">
     <div className="flex items-center justify-center gap-4">
-      <Button variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
+       <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === 1 && playerState.currentSurahRep === 1}>
+        <ChevronsLeft className="h-6 w-6" />
+      </Button>
+      <Button onClick={onRepeat} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
         <Repeat1 className="h-5 w-5" />
       </Button>
       <Button onClick={onPlayPause} size="lg" className="rounded-full h-16 w-16 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
         {playerState.isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
       </Button>
-      <Button variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
-        <Repeat className="h-5 w-5" />
+       <Button variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
+         <Repeat className="h-5 w-5" />
+       </Button>
+      <Button onClick={onNext} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
+        <ChevronsRight className="h-6 w-6" />
       </Button>
     </div>
     <div className="w-full text-center">
@@ -207,19 +217,23 @@ export default function Home() {
   const [aiFeedback, setAIFeedback] = useState<TrackMemorizationProgressOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const sessionStartTime = useRef<Date | null>(null);
+  const [sessionTime, setSessionTime] = useState(0);
+
   const { toast } = useToast();
 
   const handleSessionEnd = useCallback(() => {
+    if (sessionStartTime.current) {
+      setSessionTime(Math.round((new Date().getTime() - sessionStartTime.current.getTime()) / 1000));
+    }
     setIsSessionActive(false);
     setPlayerState(prev => ({ ...prev, isPlaying: false }));
     setSettings(null);
     setAyahData(null);
-    toast({
-      title: "Session Complete!",
-      description: "Masha'Allah! You have completed your memorization session.",
-    });
-  }, [toast]);
+    setIsSummaryOpen(true);
+  }, []);
 
   const getAIFeedback = useCallback(async () => {
     if (!settings) return;
@@ -268,6 +282,42 @@ export default function Home() {
       errorCount: 0,
     }));
   }, [settings, playerState, handleSessionEnd, getAIFeedback]);
+
+
+  const handleNextAyah = () => {
+     if (!settings) return;
+     advanceToNext();
+  };
+
+  const handlePreviousAyah = () => {
+    if (!settings || (playerState.currentAyah === 1 && playerState.currentSurahRep === 1)) return;
+
+    let prevAyah = playerState.currentAyah - 1;
+    let prevSurahRep = playerState.currentSurahRep;
+
+    if (prevAyah < 1) {
+      prevSurahRep--;
+      // This should not happen if button is disabled correctly, but as a safeguard.
+      if (prevSurahRep < 1) return;
+      prevAyah = settings.surah.totalAyahs;
+    }
+
+     setPlayerState(prev => ({
+      ...prev,
+      currentAyah: prevAyah,
+      currentSurahRep: prevSurahRep,
+      currentAyahRep: 1,
+      errorCount: 0,
+    }));
+  }
+
+  const handleRepeatAyah = () => {
+      if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(e => console.error("Audio replay error:", e));
+      }
+  }
+
 
   const handleAudioEnd = useCallback(() => {
     if (!settings) return;
@@ -333,6 +383,8 @@ export default function Home() {
     });
     setAIFeedback(null);
     setIsSessionActive(true);
+    sessionStartTime.current = new Date();
+    setSessionTime(0);
   };
 
   const handlePlayPause = () => {
@@ -348,6 +400,14 @@ export default function Home() {
       description: "Don't worry, keep trying! Repetition is key.",
     });
   };
+
+  const closeSummary = () => {
+    setIsSummaryOpen(false);
+    toast({
+      title: "Session Complete!",
+      description: "Masha'Allah! You have completed your memorization session.",
+    });
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 space-y-8 bg-background font-body">
@@ -372,7 +432,15 @@ export default function Home() {
           {!isLoading && ayahData && (
             <>
               <AyahDisplay data={ayahData} />
-              <PlayerControls playerState={playerState} settings={settings!} onPlayPause={handlePlayPause} onMistake={handleMistake} />
+              <PlayerControls 
+                playerState={playerState} 
+                settings={settings!} 
+                onPlayPause={handlePlayPause} 
+                onMistake={handleMistake}
+                onNext={handleNextAyah}
+                onPrevious={handlePreviousAyah}
+                onRepeat={handleRepeatAyah}
+              />
               <AIFeedbackDisplay feedback={aiFeedback} />
               <Button onClick={handleSessionEnd} variant="destructive" className="mt-4">
                 End Session
@@ -383,6 +451,21 @@ export default function Home() {
       )}
 
       {ayahData && <audio ref={audioRef} src={ayahData.audio["1"]} onEnded={handleAudioEnd} />}
+      
+      <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Session Complete!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Masha'Allah! You have completed your memorization session.
+              Total time: {Math.floor(sessionTime / 60)}m {sessionTime % 60}s.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={closeSummary}>Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
