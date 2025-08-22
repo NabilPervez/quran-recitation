@@ -250,7 +250,6 @@ export default function Home() {
 
     if (playerState.currentAyahRep < settings.ayahReps) {
       setPlayerState(prev => ({ ...prev, currentAyahRep: prev.currentAyahRep + 1 }));
-      // The useEffect for playerState.currentAyahRep will replay the audio
     } else {
       advanceToNext();
     }
@@ -280,24 +279,24 @@ export default function Home() {
     };
     fetchAyah();
   }, [settings, playerState.currentAyah, playerState.currentSurahRep, isSessionActive, toast, handleSessionEnd]);
-
+  
+  // This effect handles playing the audio when ayahData is ready or when repeating an ayah.
   useEffect(() => {
-    if (playerState.isPlaying && audioRef.current) {
-      audioRef.current.play().catch(e => console.error("Audio play error:", e));
-    } else if (!playerState.isPlaying && audioRef.current) {
-      audioRef.current.pause();
+    if (ayahData && audioRef.current && isSessionActive) {
+      if (playerState.isPlaying) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(e => console.error("Audio play error:", e));
+      }
+    }
+  }, [ayahData, playerState.currentAyahRep, isSessionActive, playerState.isPlaying]);
+  
+  // This effect only handles pausing.
+  useEffect(() => {
+    if (!playerState.isPlaying && audioRef.current) {
+        audioRef.current.pause();
     }
   }, [playerState.isPlaying]);
 
-
-  useEffect(() => {
-    if (isSessionActive && playerState.currentAyahRep > 1 && playerState.currentAyahRep <= (settings?.ayahReps ?? 0)) {
-        if(audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(e => console.error("Audio replay error:", e));
-        }
-    }
-  }, [playerState.currentAyahRep, isSessionActive, settings]);
 
   const handleStartSession = (newSettings: SessionSettings) => {
     setSettings(newSettings);
@@ -379,7 +378,6 @@ export default function Home() {
         ref={audioRef}
         src={ayahData?.audio["1"]}
         onEnded={handleAudioEnd}
-        autoPlay={playerState.isPlaying}
         onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
         onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
       />}
