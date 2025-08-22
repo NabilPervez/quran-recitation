@@ -28,6 +28,12 @@ type PlayerState = {
   errorCount: number;
 };
 
+const getAudioUrl = (surahId: number, ayahNumber: number): string => {
+    const surah = String(surahId).padStart(3, '0');
+    const ayah = String(ayahNumber).padStart(3, '0');
+    return `https://verses.quran.com/Alafasy/mp3/${surah}${ayah}.mp3`;
+};
+
 // --- Sub-Components ---
 
 const SettingsForm: FC<{
@@ -165,6 +171,7 @@ export default function Home() {
     errorCount: 0,
   });
   const [ayahData, setAyahData] = useState<AyahData | null>(null);
+  const [audioSrc, setAudioSrc] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -182,6 +189,7 @@ export default function Home() {
     setPlayerState(prev => ({ ...prev, isPlaying: false }));
     setSettings(null);
     setAyahData(null);
+    setAudioSrc("");
     setIsSummaryOpen(true);
   }, []);
 
@@ -260,11 +268,13 @@ export default function Home() {
       if (!settings || !isSessionActive) return;
 
       setIsLoading(true);
+      setAudioSrc(""); // Clear previous audio
       try {
         const response = await fetch(`https://quranapi.pages.dev/api/${settings.surah.id}/${playerState.currentAyah}.json`);
         if (!response.ok) throw new Error("Network response was not ok");
         const data: AyahData = await response.json();
         setAyahData(data);
+        setAudioSrc(getAudioUrl(settings.surah.id, playerState.currentAyah));
       } catch (error) {
         console.error("Failed to fetch ayah data:", error);
         toast({
@@ -280,22 +290,23 @@ export default function Home() {
     fetchAyah();
   }, [settings, playerState.currentAyah, playerState.currentSurahRep, isSessionActive, toast, handleSessionEnd]);
   
-  // This effect handles playing the audio when ayahData is ready or when repeating an ayah.
   useEffect(() => {
-    if (ayahData && audioRef.current && isSessionActive) {
+    if (audioSrc && audioRef.current && isSessionActive) {
       if (playerState.isPlaying) {
-        audioRef.current.currentTime = 0;
         audioRef.current.play().catch(e => console.error("Audio play error:", e));
+      } else {
+        audioRef.current.pause();
       }
     }
-  }, [ayahData, playerState.currentAyahRep, isSessionActive, playerState.isPlaying]);
-  
-  // This effect only handles pausing.
+  }, [audioSrc, playerState.isPlaying, isSessionActive]);
+
   useEffect(() => {
-    if (!playerState.isPlaying && audioRef.current) {
-        audioRef.current.pause();
+    if (playerState.isPlaying && audioRef.current && audioSrc) {
+        // This effect is for subsequent plays after the first one on a new src
+        // Or when a paused audio is played again.
+        audioRef.current.play().catch(e => console.error("Audio play error:", e));
     }
-  }, [playerState.isPlaying]);
+  }, [playerState.currentAyahRep, playerState.isPlaying, audioSrc]);
 
 
   const handleStartSession = (newSettings: SessionSettings) => {
@@ -347,7 +358,7 @@ export default function Home() {
         <SettingsForm onStart={handleStartSession} isSessionActive={isSessionActive} />
       ) : (
         <>
-          {isLoading && (
+          {isLoading && !ayahData && (
             <div className="flex items-center gap-4 text-primary-foreground">
               <Loader2 className="h-8 w-8 animate-spin" />
               <span className="text-xl">Loading Ayah...</span>
@@ -374,13 +385,18 @@ export default function Home() {
         </>
       )}
 
-      {<audio
+      <audio
         ref={audioRef}
-        src={ayahData?.audio["1"]}
+        src={audioSrc}
         onEnded={handleAudioEnd}
         onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
         onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
-      />}
+        onCanPlayThrough={() => {
+            if (playerState.isPlaying) {
+                audioRef.current?.play().catch(e => console.error("Autoplay error:", e));
+            }
+        }}
+      />
 
       <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
         <AlertDialogContent>
@@ -399,3 +415,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
