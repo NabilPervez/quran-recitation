@@ -1,3 +1,4 @@
+
 "use client";
 
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -10,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { surahs } from "@/lib/surahs";
 import { transliterate } from "@/lib/transliteration";
 import type { AyahData, SurahInfo } from "@/types";
-import { ChevronsLeft, ChevronsRight, Loader2, Pause, Play, Repeat, Repeat1, XCircle } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Loader2, Minus, Pause, Play, Plus, Repeat, Repeat1 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
 
 type SessionSettings = {
@@ -25,7 +26,6 @@ type PlayerState = {
   currentAyahRep: number;
   currentSurahRep: number;
   isPlaying: boolean;
-  errorCount: number;
 };
 
 const getAudioUrl = (surahId: number, ayahNumber: number): string => {
@@ -99,9 +99,9 @@ const SettingsForm: FC<{
   );
 };
 
-const AyahDisplay: FC<{ data: AyahData }> = ({ data }) => {
+const AyahDisplay: FC<{ data: AyahData, isVisible: boolean }> = ({ data, isVisible }) => {
   return (
-    <Card className="w-full max-w-4xl shadow-lg border-accent/20 transition-all duration-500 ease-in-out">
+    <Card className={`w-full max-w-5xl shadow-lg border-accent/20 transition-opacity duration-500 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <CardContent className="p-6 md:p-10 text-center flex flex-col gap-8">
         <p className="font-headline text-4xl md:text-6xl lg:text-7xl leading-normal text-foreground" dir="rtl" lang="ar">
           {data.arabic1}
@@ -121,12 +121,12 @@ const PlayerControls: FC<{
   playerState: PlayerState;
   settings: SessionSettings;
   onPlayPause: () => void;
-  onMistake: () => void;
   onNext: () => void;
   onPrevious: () => void;
   onRepeat: () => void;
-}> = ({ playerState, settings, onPlayPause, onMistake, onNext, onPrevious, onRepeat }) => (
-  <div className="flex flex-col items-center gap-4 w-full max-w-md">
+  onSettingsChange: (newSettings: Partial<SessionSettings>) => void;
+}> = ({ playerState, settings, onPlayPause, onNext, onPrevious, onRepeat, onSettingsChange }) => (
+  <div className="flex flex-col items-center gap-6 w-full max-w-md">
     <div className="flex items-center justify-center gap-4">
        <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === 1 && playerState.currentSurahRep === 1}>
         <ChevronsLeft className="h-6 w-6" />
@@ -144,17 +144,18 @@ const PlayerControls: FC<{
         <ChevronsRight className="h-6 w-6" />
       </Button>
     </div>
-    <div className="w-full text-center">
-      <p className="text-muted-foreground">
-        Ayah Repetition: {playerState.currentAyahRep} / {settings.ayahReps}
-      </p>
-      <p className="text-muted-foreground">
-        Surah Loop: {playerState.currentSurahRep} / {settings.surahReps}
-      </p>
+    <div className="flex items-center justify-center gap-8 w-full text-center">
+        <div className="flex items-center gap-2">
+            <Button onClick={() => onSettingsChange({ ayahReps: Math.max(1, settings.ayahReps - 1)})} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
+            <span className="text-muted-foreground text-sm whitespace-nowrap">Ayah: {playerState.currentAyahRep} / {settings.ayahReps}</span>
+            <Button onClick={() => onSettingsChange({ ayahReps: settings.ayahReps + 1})} variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+        </div>
+         <div className="flex items-center gap-2">
+            <Button onClick={() => onSettingsChange({ surahReps: Math.max(1, settings.surahReps - 1)})} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
+            <span className="text-muted-foreground text-sm whitespace-nowrap">Surah: {playerState.currentSurahRep} / {settings.surahReps}</span>
+            <Button onClick={() => onSettingsChange({ surahReps: settings.surahReps + 1})} variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+        </div>
     </div>
-    <Button onClick={onMistake} variant="outline" className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive">
-      <XCircle className="mr-2 h-4 w-4" /> I made a mistake
-    </Button>
   </div>
 );
 
@@ -168,31 +169,19 @@ export default function Home() {
     currentAyahRep: 1,
     currentSurahRep: 1,
     isPlaying: false,
-    errorCount: 0,
   });
   const [ayahData, setAyahData] = useState<AyahData | null>(null);
   const [audioSrc, setAudioSrc] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isDisplayVisible, setIsDisplayVisible] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionStartTime = useRef<Date | null>(null);
   const [sessionTime, setSessionTime] = useState(0);
 
   const { toast } = useToast();
-
-  const handleSessionEnd = useCallback(() => {
-    if (sessionStartTime.current) {
-      setSessionTime(Math.round((new Date().getTime() - sessionStartTime.current.getTime()) / 1000));
-    }
-    setIsSessionActive(false);
-    setPlayerState(prev => ({ ...prev, isPlaying: false }));
-    setSettings(null);
-    setAyahData(null);
-    setAudioSrc("");
-    setIsSummaryOpen(true);
-  }, []);
-
+  
   const advanceToNext = useCallback(() => {
     if (!settings) return;
 
@@ -213,10 +202,20 @@ export default function Home() {
       currentAyah: nextAyah,
       currentSurahRep: nextSurahRep,
       currentAyahRep: 1,
-      errorCount: 0,
     }));
-  }, [settings, playerState, handleSessionEnd]);
+  }, [settings, playerState.currentAyah, playerState.currentSurahRep]);
 
+  const handleSessionEnd = useCallback(() => {
+    if (sessionStartTime.current) {
+      setSessionTime(Math.round((new Date().getTime() - sessionStartTime.current.getTime()) / 1000));
+    }
+    setIsSessionActive(false);
+    setPlayerState(prev => ({ ...prev, isPlaying: false }));
+    setSettings(null);
+    setAyahData(null);
+    setAudioSrc("");
+    setIsSummaryOpen(true);
+  }, []);
 
   const handleNextAyah = () => {
      if (!settings) return;
@@ -231,8 +230,7 @@ export default function Home() {
 
     if (prevAyah < 1) {
       prevSurahRep--;
-      // This should not happen if button is disabled correctly, but as a safeguard.
-      if (prevSurahRep < 1) return;
+      if (prevSurahRep < 1) return; // Should be disabled, but safeguard
       prevAyah = settings.surah.totalAyahs;
     }
 
@@ -241,17 +239,17 @@ export default function Home() {
       currentAyah: prevAyah,
       currentSurahRep: prevSurahRep,
       currentAyahRep: 1,
-      errorCount: 0,
     }));
   }
 
   const handleRepeatAyah = () => {
       if (audioRef.current) {
           audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(e => console.error("Audio replay error:", e));
+          if (playerState.isPlaying) {
+             audioRef.current.play().catch(e => console.error("Audio replay error:", e));
+          }
       }
   }
-
 
   const handleAudioEnd = useCallback(() => {
     if (!settings) return;
@@ -261,52 +259,61 @@ export default function Home() {
     } else {
       advanceToNext();
     }
-  }, [settings, playerState, advanceToNext]);
+  }, [settings, playerState.currentAyahRep, advanceToNext]);
 
+  // Effect for fetching Ayah data
   useEffect(() => {
     const fetchAyah = async () => {
       if (!settings || !isSessionActive) return;
 
+      setIsDisplayVisible(false);
       setIsLoading(true);
-      setAudioSrc(""); // Clear previous audio
-      try {
-        const response = await fetch(`https://quranapi.pages.dev/api/${settings.surah.id}/${playerState.currentAyah}.json`);
-        if (!response.ok) throw new Error("Network response was not ok");
-        const data: AyahData = await response.json();
-        setAyahData(data);
-        setAudioSrc(getAudioUrl(settings.surah.id, playerState.currentAyah));
-      } catch (error) {
-        console.error("Failed to fetch ayah data:", error);
-        toast({
-          variant: "destructive",
-          title: "API Error",
-          description: `Could not fetch Ayah ${playerState.currentAyah} of Surah ${settings.surah.englishName}.`,
-        });
-        handleSessionEnd();
-      } finally {
-        setIsLoading(false);
-      }
+      
+      // Delay fetching slightly to allow fade-out animation
+      setTimeout(async () => {
+        try {
+          const response = await fetch(`https://quranapi.pages.dev/api/${settings.surah.id}/${playerState.currentAyah}.json`);
+          if (!response.ok) throw new Error("Network response was not ok");
+          const data: AyahData = await response.json();
+          setAyahData(data);
+          setAudioSrc(getAudioUrl(settings.surah.id, playerState.currentAyah));
+        } catch (error) {
+          console.error("Failed to fetch ayah data:", error);
+          toast({
+            variant: "destructive",
+            title: "API Error",
+            description: `Could not fetch Ayah ${playerState.currentAyah} of Surah ${settings.surah.englishName}.`,
+          });
+          handleSessionEnd();
+        } finally {
+          setIsLoading(false);
+          setIsDisplayVisible(true);
+        }
+      }, 500); // 500ms for fade out
     };
     fetchAyah();
-  }, [settings, playerState.currentAyah, playerState.currentSurahRep, isSessionActive, toast, handleSessionEnd]);
+  }, [settings?.surah.id, playerState.currentAyah, playerState.currentSurahRep, isSessionActive, toast, handleSessionEnd]);
   
+  // Effect for controlling audio playback
   useEffect(() => {
-    if (audioSrc && audioRef.current && isSessionActive) {
+    if (audioSrc && audioRef.current) {
       if (playerState.isPlaying) {
         audioRef.current.play().catch(e => console.error("Audio play error:", e));
       } else {
         audioRef.current.pause();
       }
     }
-  }, [audioSrc, playerState.isPlaying, isSessionActive]);
-
+  }, [audioSrc, playerState.isPlaying]);
+  
+  // Effect for handling automatic repetition playback
   useEffect(() => {
-    if (playerState.isPlaying && audioRef.current && audioSrc) {
-        // This effect is for subsequent plays after the first one on a new src
-        // Or when a paused audio is played again.
-        audioRef.current.play().catch(e => console.error("Audio play error:", e));
+    if (playerState.isPlaying && audioRef.current && !isLoading && audioSrc) {
+        if(playerState.currentAyahRep > 1) { // Only auto-replay on subsequent reps
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(e => console.error("Audio replay error:", e));
+        }
     }
-  }, [playerState.currentAyahRep, playerState.isPlaying, audioSrc]);
+  }, [playerState.currentAyahRep, playerState.isPlaying, isLoading, audioSrc]);
 
 
   const handleStartSession = (newSettings: SessionSettings) => {
@@ -316,7 +323,6 @@ export default function Home() {
       currentAyahRep: 1,
       currentSurahRep: 1,
       isPlaying: true, // Auto-play on start
-      errorCount: 0,
     });
     setIsSessionActive(true);
     sessionStartTime.current = new Date();
@@ -328,13 +334,8 @@ export default function Home() {
     setPlayerState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
   };
 
-  const handleMistake = () => {
-    if (!isSessionActive) return;
-    setPlayerState(prev => ({ ...prev, errorCount: prev.errorCount + 1 }));
-    toast({
-      title: "Mistake Noted",
-      description: "Don't worry, keep trying! Repetition is key.",
-    });
+  const handleSettingsChange = (newSettings: Partial<SessionSettings>) => {
+    setSettings(prev => prev ? { ...prev, ...newSettings } : null);
   };
 
   const closeSummary = () => {
@@ -365,17 +366,17 @@ export default function Home() {
             </div>
           )}
 
-          {!isLoading && ayahData && (
+          {ayahData && (
             <>
-              <AyahDisplay data={ayahData} />
+              <AyahDisplay data={ayahData} isVisible={isDisplayVisible} />
               <PlayerControls
                 playerState={playerState}
                 settings={settings!}
                 onPlayPause={handlePlayPause}
-                onMistake={handleMistake}
                 onNext={handleNextAyah}
                 onPrevious={handlePreviousAyah}
                 onRepeat={handleRepeatAyah}
+                onSettingsChange={handleSettingsChange}
               />
               <Button onClick={handleSessionEnd} variant="destructive" className="mt-4">
                 End Session
@@ -415,5 +416,6 @@ export default function Home() {
     </main>
   );
 }
+    
 
     
