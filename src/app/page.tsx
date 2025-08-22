@@ -279,19 +279,10 @@ export default function Home() {
       }
     };
     fetchAyah();
-  }, [settings, playerState.currentAyah, isSessionActive, toast, handleSessionEnd]);
-
-    useEffect(() => {
-        if (ayahData && audioRef.current && isSessionActive) {
-            audioRef.current.load(); // Load the new audio source
-            if (playerState.isPlaying) {
-                audioRef.current.play().catch(e => console.error("Audio play error:", e));
-            }
-        }
-    }, [ayahData, isSessionActive]);
+  }, [settings, playerState.currentAyah, playerState.currentSurahRep, isSessionActive, toast, handleSessionEnd]);
 
   useEffect(() => {
-    if (playerState.isPlaying && audioRef.current && !audioRef.current.src.endsWith('null')) {
+    if (playerState.isPlaying && audioRef.current) {
       audioRef.current.play().catch(e => console.error("Audio play error:", e));
     } else if (!playerState.isPlaying && audioRef.current) {
       audioRef.current.pause();
@@ -384,7 +375,14 @@ export default function Home() {
         </>
       )}
 
-      {<audio ref={audioRef} src={ayahData?.audio["1"]} onEnded={handleAudioEnd} />}
+      {<audio
+        ref={audioRef}
+        src={ayahData?.audio["1"]}
+        onEnded={handleAudioEnd}
+        autoPlay={playerState.isPlaying}
+        onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
+        onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
+      />}
 
       <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
         <AlertDialogContent>
