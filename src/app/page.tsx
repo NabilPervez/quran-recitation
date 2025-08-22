@@ -281,13 +281,23 @@ export default function Home() {
     fetchAyah();
   }, [settings, playerState.currentAyah, isSessionActive, toast, handleSessionEnd]);
 
+    useEffect(() => {
+        if (ayahData && audioRef.current && isSessionActive) {
+            audioRef.current.load(); // Load the new audio source
+            if (playerState.isPlaying) {
+                audioRef.current.play().catch(e => console.error("Audio play error:", e));
+            }
+        }
+    }, [ayahData, isSessionActive]);
+
   useEffect(() => {
-    if (playerState.isPlaying && audioRef.current) {
+    if (playerState.isPlaying && audioRef.current && !audioRef.current.src.endsWith('null')) {
       audioRef.current.play().catch(e => console.error("Audio play error:", e));
     } else if (!playerState.isPlaying && audioRef.current) {
       audioRef.current.pause();
     }
   }, [playerState.isPlaying]);
+
 
   useEffect(() => {
     if (isSessionActive && playerState.currentAyahRep > 1 && playerState.currentAyahRep <= (settings?.ayahReps ?? 0)) {
@@ -374,7 +384,7 @@ export default function Home() {
         </>
       )}
 
-      {ayahData && <audio ref={audioRef} src={ayahData.audio["1"]} onEnded={handleAudioEnd} />}
+      {<audio ref={audioRef} src={ayahData?.audio["1"]} onEnded={handleAudioEnd} />}
 
       <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
         <AlertDialogContent>
