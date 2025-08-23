@@ -169,6 +169,17 @@ const PlayerControls: FC<{
 
 // --- Main Page Component ---
 
+const AyahTitle: FC<{ settings: SessionSettings | null, playerState: PlayerState }> = ({ settings, playerState }) => {
+  if (!settings) return null;
+
+  return (
+    <div className="text-center mb-6">
+      <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary-foreground tracking-tight">{settings.surah.englishName}</h1>
+      <p className="text-muted-foreground text-lg mt-2">{settings.surah.name}</p>
+    </div>
+  );
+}
+
 export default function Home() {
   const [settings, setSettings] = useState<SessionSettings | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState>({
@@ -262,26 +273,22 @@ export default function Home() {
   const handleAudioEnd = useCallback(() => {
     if (!settings) return;
 
-    const playNext = () => {
-      if (playerState.currentAyahRep < settings.ayahReps) {
-        setPlayerState(prev => ({ ...prev, currentAyahRep: prev.currentAyahRep + 1 }));
-      } else {
-        advanceToNext();
-      }
-    };
-
-    if (isAutoplayEnabled) {
-      setTimeout(playNext, 1000); // 1-second pause
+    if (playerState.currentAyahRep < settings.ayahReps) {
+ setPlayerState(prev => ({ ...prev, currentAyahRep: prev.currentAyahRep + 1 }));
+ if (isAutoplayEnabled) {
+ // Audio will auto-play in the useEffect for currentAyahRep change
+ } else {
+ setPlayerState(prev => ({...prev, isPlaying: false}));
+ }
     } else {
-      setPlayerState(prev => ({...prev, isPlaying: false}));
+ advanceToNext();
     }
-  }, [settings, playerState.currentAyahRep, advanceToNext, isAutoplayEnabled]);
+  }, [settings, playerState.currentAyahRep, advanceToNext, isAutoplayEnabled, setPlayerState]);
 
   // Effect for fetching Ayah data
   useEffect(() => {
     const fetchAyah = async () => {
       if (!settings || !isSessionActive) return;
-
       setIsDisplayVisible(false);
       setIsLoading(true);
       
@@ -307,7 +314,8 @@ export default function Home() {
         }
       }, 500); // 500ms for fade out
     };
-    fetchAyah();
+    // Fetch data whenever ayah/surah rep changes, but only if session is active
+    if (isSessionActive) fetchAyah();
   }, [settings?.surah.id, playerState.currentAyah, playerState.currentSurahRep, isSessionActive, toast, handleSessionEnd]);
   
   // Effect for controlling audio playback
@@ -322,15 +330,16 @@ export default function Home() {
   }, [audioSrc, playerState.isPlaying]);
   
   // Effect for handling automatic repetition playback
+  // This effect is triggered when currentAyahRep changes
   useEffect(() => {
-    if (playerState.isPlaying && audioRef.current && !isLoading && audioSrc && isAutoplayEnabled) {
-        if(playerState.currentAyahRep > 1) { // Only auto-replay on subsequent reps
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(e => console.error("Audio replay error:", e));
-        }
+    if (playerState.isPlaying && audioRef.current && isAutoplayEnabled && !isLoading && audioSrc) {
+      // Small delay to ensure new audio source (if ayah changed) is ready
+      const playTimeout = setTimeout(() => {
+         audioRef.current?.play().catch(e => console.error("Autoplay replay error:", e));
+      }, 100); 
+      return () => clearTimeout(playTimeout);
     }
   }, [playerState.currentAyahRep, playerState.isPlaying, isLoading, audioSrc, isAutoplayEnabled]);
-
 
   const handleStartSession = (newSettings: SessionSettings) => {
     setSettings(newSettings);
@@ -365,6 +374,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 space-y-8 bg-background font-body">
      {!isSessionActive && (
+        // Initial Title
         <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary-foreground tracking-tight">
             Ayah Echo
@@ -377,6 +387,8 @@ export default function Home() {
         <SettingsForm onStart={handleStartSession} isSessionActive={isSessionActive} />
       ) : (
         <>
+          {/* Title for active session */}
+          <AyahTitle settings={settings} playerState={playerState} />
           {isLoading && !ayahData && (
             <div className="flex items-center gap-4 text-primary-foreground">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -412,11 +424,11 @@ export default function Home() {
           src={audioSrc}
           onEnded={handleAudioEnd}
           onPlay={() => setPlayerState(p => ({...p, isPlaying: true}))}
-          onPause={() => setPlayerState(p => ({...p, isPlaying: false}))}
-          onCanPlayThrough={() => {
-              if (playerState.isPlaying && isAutoplayEnabled) {
-                  audioRef.current?.play().catch(e => console.error("Autoplay error:", e));
-              }
+          onPause={() => {
+            // Only set isPlaying to false if pause was user-initiated or not part of autoplay flow
+            if (!isAutoplayEnabled || (audioRef.current && audioRef.current.currentTime < audioRef.current.duration)) {
+                 setPlayerState(p => ({...p, isPlaying: false}));
+            }
           }}
         />
       )}
