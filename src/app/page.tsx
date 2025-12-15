@@ -29,9 +29,9 @@ type PlayerState = {
 };
 
 const getAudioUrl = (surahId: number, ayahNumber: number): string => {
-    const surah = String(surahId).padStart(3, '0');
-    const ayah = String(ayahNumber).padStart(3, '0');
-    return `https://verses.quran.com/Alafasy/mp3/${surah}${ayah}.mp3`;
+  const surah = String(surahId).padStart(3, '0');
+  const ayah = String(ayahNumber).padStart(3, '0');
+  return `https://verses.quran.com/Alafasy/mp3/${surah}${ayah}.mp3`;
 };
 
 // --- Sub-Components ---
@@ -61,10 +61,10 @@ const SettingsForm: FC<{
   };
 
   return (
-    <Card className="w-full max-w-2xl shadow-lg border-accent/20">
-      <CardHeader>
-        <CardTitle className="font-headline text-2xl text-accent-foreground">Memorization Settings</CardTitle>
-        <CardDescription>Select a surah and set your repetition goals.</CardDescription>
+    <Card className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-gray-100">
+        <CardTitle className="font-headline text-2xl text-gray-900">Memorization Settings</CardTitle>
+        <CardDescription className="text-gray-600">Select a surah and set your repetition goals.</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2 md:col-span-2">
@@ -95,7 +95,7 @@ const SettingsForm: FC<{
           <Input id="surah-reps" type="number" value={surahReps} onChange={e => setSurahReps(Number(e.target.value))} min="1" disabled={isSessionActive} />
         </div>
         <div className="md:col-span-2">
-          <Button onClick={handleStart} disabled={isSessionActive} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+          <Button onClick={handleStart} disabled={isSessionActive} className="w-full bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white rounded-xl shadow-emerald-100 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
             <Play className="mr-2 h-4 w-4" /> Start Session
           </Button>
         </div>
@@ -107,20 +107,20 @@ const SettingsForm: FC<{
 const AyahDisplay: FC<{ data: AyahData | null, isVisible: boolean }> = ({ data, isVisible }) => {
   if (!data) {
     return (
-      <Card className={`w-full max-w-5xl shadow-lg border-accent/20 transition-opacity duration-500 ease-in-out opacity-0`}>
+      <Card className={`w-full max-w-5xl bg-white rounded-2xl shadow-sm border-2 border-gray-100 transition-opacity duration-500 ease-in-out opacity-0`}>
         <CardContent className="p-6 md:p-10 text-center flex flex-col gap-8 h-[290px]" />
       </Card>
     );
   }
 
   return (
-    <Card className={`w-full max-w-5xl shadow-lg border-accent/20 transition-opacity duration-500 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <Card className={`w-full max-w-5xl bg-white rounded-2xl shadow-sm border-2 border-gray-100 transition-opacity duration-500 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       <CardContent className="p-6 md:p-10 text-center flex flex-col gap-8 min-h-[290px] justify-center">
         <p className="font-headline text-4xl md:text-6xl lg:text-7xl leading-normal text-foreground" dir="rtl" lang="ar">
           {data.arabic}
         </p>
         {data.transliteration && (
-          <p 
+          <p
             className="text-lg md:text-xl text-muted-foreground font-mono"
             dangerouslySetInnerHTML={{ __html: data.transliteration }}
           />
@@ -148,37 +148,37 @@ const PlayerControls: FC<{
 }> = ({ playerState, settings, onPlayPause, onNext, onPrevious, onRepeat, onSettingsChange, isAutoplayEnabled, onAutoplayChange }) => (
   <div className="flex flex-col items-center gap-6 w-full max-w-md">
     <div className="flex items-center justify-center gap-4">
-       <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === settings.startAyah && playerState.currentSurahRep === 1}>
+      <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === settings.startAyah && playerState.currentSurahRep === 1}>
         <ChevronsLeft className="h-6 w-6" />
       </Button>
       <Button onClick={onRepeat} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
         <Repeat1 className="h-5 w-5" />
       </Button>
-      <Button onClick={onPlayPause} size="lg" className="rounded-full h-16 w-16 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md">
-        {playerState.isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
+      <Button onClick={onPlayPause} size="lg" className="rounded-full h-16 w-16 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white shadow-emerald-100 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg">
+        {playerState.isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
       </Button>
-       <Button variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled>
-         <Repeat className="h-5 w-5 opacity-0" />
-       </Button>
+      <Button variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled>
+        <Repeat className="h-5 w-5 opacity-0" />
+      </Button>
       <Button onClick={onNext} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
         <ChevronsRight className="h-6 w-6" />
       </Button>
     </div>
     <div className="flex items-center justify-center gap-8 w-full text-center">
-        <div className="flex items-center gap-2">
-            <Label htmlFor="autoplay-switch" className="text-muted-foreground text-sm">Autoplay</Label>
-            <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} />
-        </div>
-        <div className="flex items-center gap-2">
-            <Button onClick={() => onSettingsChange({ ayahReps: Math.max(1, settings.ayahReps - 1)})} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">Ayah: {playerState.currentAyahRep} / {settings.ayahReps}</span>
-            <Button onClick={() => onSettingsChange({ ayahReps: settings.ayahReps + 1})} variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
-        </div>
-         <div className="flex items-center gap-2">
-            <Button onClick={() => onSettingsChange({ surahReps: Math.max(1, settings.surahReps - 1)})} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
-            <span className="text-muted-foreground text-sm whitespace-nowrap">Surah: {playerState.currentSurahRep} / {settings.surahReps}</span>
-            <Button onClick={() => onSettingsChange({ surahReps: settings.surahReps + 1})} variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
-        </div>
+      <div className="flex items-center gap-2">
+        <Label htmlFor="autoplay-switch" className="text-muted-foreground text-sm">Autoplay</Label>
+        <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} />
+      </div>
+      <div className="flex items-center gap-2">
+        <Button onClick={() => onSettingsChange({ ayahReps: Math.max(1, settings.ayahReps - 1) })} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
+        <span className="text-muted-foreground text-sm whitespace-nowrap">Ayah: {playerState.currentAyahRep} / {settings.ayahReps}</span>
+        <Button onClick={() => onSettingsChange({ ayahReps: settings.ayahReps + 1 })} variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button onClick={() => onSettingsChange({ surahReps: Math.max(1, settings.surahReps - 1) })} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
+        <span className="text-muted-foreground text-sm whitespace-nowrap">Surah: {playerState.currentSurahRep} / {settings.surahReps}</span>
+        <Button onClick={() => onSettingsChange({ surahReps: settings.surahReps + 1 })} variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+      </div>
     </div>
   </div>
 );
@@ -191,8 +191,8 @@ const AyahTitle: FC<{ settings: SessionSettings | null, playerState: PlayerState
 
   return (
     <div className="text-center mb-6">
-      <h1 className="text-4xl md:text-5xl font-headline font-bold text-accent-foreground tracking-tight">{settings.surah.englishName}</h1>
-      <p className="text-muted-foreground text-lg mt-2">{settings.surah.name} : Ayah {playerState.currentAyah}</p>
+      <h1 className="text-4xl md:text-5xl font-headline font-bold text-gray-900 tracking-tight">{settings.surah.englishName}</h1>
+      <p className="text-gray-600 text-lg mt-2">{settings.surah.name} : Ayah {playerState.currentAyah}</p>
     </div>
   );
 }
@@ -241,7 +241,7 @@ export default function Home() {
     setPlayerState(prev => {
       let nextAyah = prev.currentAyah;
       let nextSurahRep = prev.currentSurahRep;
-      
+
       // Check if we are at the end of the surah
       if (prev.currentAyah >= settings.surah.totalAyahs) {
         nextSurahRep++;
@@ -269,8 +269,8 @@ export default function Home() {
 
 
   const handleNextAyah = () => {
-     if (!settings) return;
-     advanceToNext();
+    if (!settings) return;
+    advanceToNext();
   };
 
   const handlePreviousAyah = () => {
@@ -278,31 +278,31 @@ export default function Home() {
     if (playerState.currentAyah <= settings.startAyah && playerState.currentSurahRep === 1) return;
 
     setPlayerState(prev => {
-        let prevAyah = prev.currentAyah - 1;
-        let prevSurahRep = prev.currentSurahRep;
+      let prevAyah = prev.currentAyah - 1;
+      let prevSurahRep = prev.currentSurahRep;
 
-        if (prevAyah < settings.startAyah) {
-          prevSurahRep--;
-          if (prevSurahRep < 1) return prev; // Should be disabled, but safeguard
-          prevAyah = settings.surah.totalAyahs;
-        }
+      if (prevAyah < settings.startAyah) {
+        prevSurahRep--;
+        if (prevSurahRep < 1) return prev; // Should be disabled, but safeguard
+        prevAyah = settings.surah.totalAyahs;
+      }
 
-        return {
-            ...prev,
-            currentAyah: prevAyah,
-            currentSurahRep: prevSurahRep,
-            currentAyahRep: 1,
-        };
+      return {
+        ...prev,
+        currentAyah: prevAyah,
+        currentSurahRep: prevSurahRep,
+        currentAyahRep: 1,
+      };
     });
   }
 
   const handleRepeatAyah = () => {
-      if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          if (playerState.isPlaying) {
-             audioRef.current.play().catch(e => console.error("Audio replay error:", e));
-          }
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      if (playerState.isPlaying) {
+        audioRef.current.play().catch(e => console.error("Audio replay error:", e));
       }
+    }
   }
 
   const playNextOrRepeat = useCallback(() => {
@@ -322,7 +322,7 @@ export default function Home() {
         playNextOrRepeat();
       }, 1000); // 1-second pause
     } else {
-       setPlayerState(prev => ({ ...prev, isPlaying: false }));
+      setPlayerState(prev => ({ ...prev, isPlaying: false }));
     }
   }, [isAutoplayEnabled, playNextOrRepeat]);
 
@@ -340,22 +340,22 @@ export default function Home() {
         const indoResponse = await fetch(`https://quran-api.santrikoding.com/api/surah/${settings.surah.id}`);
         if (!indoResponse.ok) throw new Error("Network response for Indonesian API was not ok");
         const surahData = await indoResponse.json();
-        
+
         const verse = surahData.ayat[playerState.currentAyah - 1];
         if (!verse) throw new Error("Verse not found in API response");
 
         let englishTranslation = "Translation not available.";
         try {
-            // English API call
-            const englishResponse = await fetch(`http://api.alquran.cloud/v1/ayah/${settings.surah.id}:${playerState.currentAyah}/en.sahih`);
-            if (englishResponse.ok) {
-                const englishApiData = await englishResponse.json();
-                if (englishApiData.code === 200 && englishApiData.data && englishApiData.data.text) {
-                    englishTranslation = englishApiData.data.text;
-                }
+          // English API call
+          const englishResponse = await fetch(`http://api.alquran.cloud/v1/ayah/${settings.surah.id}:${playerState.currentAyah}/en.sahih`);
+          if (englishResponse.ok) {
+            const englishApiData = await englishResponse.json();
+            if (englishApiData.code === 200 && englishApiData.data && englishApiData.data.text) {
+              englishTranslation = englishApiData.data.text;
             }
+          }
         } catch (e) {
-            console.error("Failed to fetch English translation:", e);
+          console.error("Failed to fetch English translation:", e);
         }
 
         const data: AyahData = {
@@ -364,7 +364,7 @@ export default function Home() {
           transliteration: verse.tr,
           english: englishTranslation,
         };
-        
+
         setAyahData(data);
         setAudioSrc(getAudioUrl(settings.surah.id, playerState.currentAyah));
       } catch (error) {
@@ -393,23 +393,23 @@ export default function Home() {
     if (!audio || !audioSrc) return;
 
     const playAudio = () => {
-        audio.play().catch(e => {
-            console.error("Audio play error:", e);
-            setPlayerState(p => ({...p, isPlaying: false}));
-        });
+      audio.play().catch(e => {
+        console.error("Audio play error:", e);
+        setPlayerState(p => ({ ...p, isPlaying: false }));
+      });
     };
 
     if (playerState.isPlaying) {
-        if (audio.currentSrc !== audioSrc) {
-            audio.load();
-            const handleDataLoaded = () => {
-                playAudio();
-                audio.removeEventListener('loadeddata', handleDataLoaded);
-            };
-            audio.addEventListener('loadeddata', handleDataLoaded);
-        } else {
-            playAudio();
-        }
+      if (audio.currentSrc !== audioSrc) {
+        audio.load();
+        const handleDataLoaded = () => {
+          playAudio();
+          audio.removeEventListener('loadeddata', handleDataLoaded);
+        };
+        audio.addEventListener('loadeddata', handleDataLoaded);
+      } else {
+        playAudio();
+      }
     } else {
       audio.pause();
     }
@@ -419,8 +419,8 @@ export default function Home() {
   useEffect(() => {
     const audio = audioRef.current;
     if (playerState.isPlaying && audio && playerState.currentAyahRep > 1) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.error("Audio replay error:", e));
+      audio.currentTime = 0;
+      audio.play().catch(e => console.error("Audio replay error:", e));
     }
   }, [playerState.currentAyahRep, playerState.isPlaying]);
 
@@ -442,8 +442,8 @@ export default function Home() {
     if (!isSessionActive || !audioSrc) return;
 
     if (autoplayTimeoutRef.current) {
-        clearTimeout(autoplayTimeoutRef.current);
-        autoplayTimeoutRef.current = null;
+      clearTimeout(autoplayTimeoutRef.current);
+      autoplayTimeoutRef.current = null;
     }
 
     setPlayerState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
@@ -463,14 +463,14 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 space-y-8 bg-background font-body">
-     {!isSessionActive && (
+      {!isSessionActive && (
         <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-headline font-bold text-accent-foreground tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600 tracking-tight">
             Ayah Echo
-            </h1>
-            <p className="text-muted-foreground text-lg mt-2">Quran Memorization Tool</p>
+          </h1>
+          <p className="text-gray-600 text-lg mt-2 px-4 py-1 bg-white/50 backdrop-blur-sm rounded-full inline-block border border-gray-200 shadow-sm">Quran Memorization Tool</p>
         </div>
-     )}
+      )}
 
       {!isSessionActive ? (
         <SettingsForm onStart={handleStartSession} isSessionActive={isSessionActive} />
@@ -510,11 +510,11 @@ export default function Home() {
           src={audioSrc}
           onEnded={handleAudioEnd}
           onPlay={() => {
-            if (!playerState.isPlaying) setPlayerState(p => ({...p, isPlaying: true}))
+            if (!playerState.isPlaying) setPlayerState(p => ({ ...p, isPlaying: true }))
           }}
           onPause={() => {
             if (playerState.isPlaying && !autoplayTimeoutRef.current) {
-                setPlayerState(p => ({...p, isPlaying: false}))
+              setPlayerState(p => ({ ...p, isPlaying: false }))
             }
           }}
         />
@@ -538,8 +538,7 @@ export default function Home() {
   );
 }
 
-    
 
-    
 
-    
+
+
