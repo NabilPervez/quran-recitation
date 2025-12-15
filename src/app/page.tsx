@@ -67,7 +67,7 @@ const SettingsForm: FC<{
   return (
     <Card className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
       <CardHeader className="bg-gradient-to-r from-emerald-50 to-blue-50 border-b border-gray-100">
-        <CardTitle className="font-headline text-2xl text-gray-900">Memorization Settings</CardTitle>
+        <CardTitle className="font-headline text-2xl text-gray-900">Quran Memorization Settings</CardTitle>
         <CardDescription className="text-gray-600">Select a surah and set your repetition goals.</CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -167,28 +167,22 @@ const PlayerControls: FC<{
   onAutoplayChange: (enabled: boolean) => void;
 }> = ({ playerState, settings, onPlayPause, onNext, onPrevious, onRepeat, onSettingsChange, isAutoplayEnabled, onAutoplayChange }) => (
   <div className="flex flex-col items-center gap-6 w-full max-w-md">
-    <div className="flex items-center justify-center gap-4">
+    <div className="flex items-center justify-center gap-2">
       <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === settings.startAyah && playerState.currentSurahRep === 1}>
         <ChevronsLeft className="h-6 w-6" />
       </Button>
-      <Button onClick={onRepeat} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
-        <Repeat1 className="h-5 w-5" />
-      </Button>
       <Button onClick={onPlayPause} size="lg" className="rounded-full h-16 w-16 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white shadow-emerald-100 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg">
         {playerState.isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
-      </Button>
-      <Button variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled>
-        <Repeat className="h-5 w-5 opacity-0" />
       </Button>
       <Button onClick={onNext} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
         <ChevronsRight className="h-6 w-6" />
       </Button>
     </div>
+    <div className="flex items-center justify-center gap-2">
+      <Label htmlFor="autoplay-switch" className="text-muted-foreground text-sm">Autoplay</Label>
+      <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} />
+    </div>
     <div className="flex items-center justify-center gap-8 w-full text-center">
-      <div className="flex items-center gap-2">
-        <Label htmlFor="autoplay-switch" className="text-muted-foreground text-sm">Autoplay</Label>
-        <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} />
-      </div>
       <div className="flex items-center gap-2">
         <Button onClick={() => onSettingsChange({ ayahReps: Math.max(1, settings.ayahReps - 1) })} variant="outline" size="icon" className="h-8 w-8"><Minus className="h-4 w-4" /></Button>
         <span className="text-muted-foreground text-sm whitespace-nowrap">Ayah: {playerState.currentAyahRep} / {settings.ayahReps}</span>
@@ -488,7 +482,6 @@ export default function Home() {
           <h1 className="text-4xl md:text-5xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600 tracking-tight">
             Ayah Echo
           </h1>
-          <p className="text-gray-600 text-lg mt-2 px-4 py-1 bg-white/50 backdrop-blur-sm rounded-full inline-block border border-gray-200 shadow-sm">Quran Memorization Tool</p>
         </div>
       )}
 
