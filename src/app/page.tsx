@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState, type FC } from "react";
 type SessionSettings = {
   surah: SurahInfo;
   startAyah: number;
+  endAyah: number;
   ayahReps: number;
   surahReps: number;
 };
@@ -42,12 +43,14 @@ const SettingsForm: FC<{
 }> = ({ onStart, isSessionActive }) => {
   const [selectedSurahId, setSelectedSurahId] = useState<string>("1");
   const [startAyah, setStartAyah] = useState<number>(1);
+  const [endAyah, setEndAyah] = useState<number>(1);
   const [ayahReps, setAyahReps] = useState<number>(3);
   const [surahReps, setSurahReps] = useState<number>(1);
   const selectedSurah = surahs.find(s => s.id === parseInt(selectedSurahId, 10))!;
 
   useEffect(() => {
     setStartAyah(1);
+    setEndAyah(selectedSurah.totalAyahs);
   }, [selectedSurahId]);
 
 
@@ -55,6 +58,7 @@ const SettingsForm: FC<{
     onStart({
       surah: selectedSurah,
       startAyah: Math.max(1, Math.min(startAyah, selectedSurah.totalAyahs)),
+      endAyah: Math.max(startAyah, Math.min(endAyah, selectedSurah.totalAyahs)),
       ayahReps: Math.max(1, ayahReps),
       surahReps: Math.max(1, surahReps),
     });
@@ -84,7 +88,23 @@ const SettingsForm: FC<{
         </div>
         <div className="space-y-2">
           <Label htmlFor="start-ayah">Starting Ayah</Label>
-          <Input id="start-ayah" type="number" value={startAyah} onChange={e => setStartAyah(Number(e.target.value))} min="1" max={selectedSurah.totalAyahs} disabled={isSessionActive} />
+          <Input
+            id="start-ayah"
+            type="number"
+            value={startAyah}
+            onChange={e => {
+              const val = Number(e.target.value);
+              setStartAyah(val);
+              if (val > endAyah) setEndAyah(val);
+            }}
+            min="1"
+            max={selectedSurah.totalAyahs}
+            disabled={isSessionActive}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="end-ayah">Ending Ayah</Label>
+          <Input id="end-ayah" type="number" value={endAyah} onChange={e => setEndAyah(Number(e.target.value))} min={startAyah} max={selectedSurah.totalAyahs} disabled={isSessionActive} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="ayah-reps">Ayah Repetitions</Label>
@@ -243,7 +263,7 @@ export default function Home() {
       let nextSurahRep = prev.currentSurahRep;
 
       // Check if we are at the end of the surah
-      if (prev.currentAyah >= settings.surah.totalAyahs) {
+      if (prev.currentAyah >= settings.endAyah) {
         nextSurahRep++;
         // Check if we've completed all surah repetitions
         if (nextSurahRep > settings.surahReps) {
@@ -284,7 +304,7 @@ export default function Home() {
       if (prevAyah < settings.startAyah) {
         prevSurahRep--;
         if (prevSurahRep < 1) return prev; // Should be disabled, but safeguard
-        prevAyah = settings.surah.totalAyahs;
+        prevAyah = settings.endAyah;
       }
 
       return {
