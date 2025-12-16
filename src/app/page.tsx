@@ -476,7 +476,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8 space-y-8 bg-background font-body">
+    <main className="flex min-h-screen flex-col items-center justify-start md:justify-center px-4 pb-4 pt-2 md:p-8 space-y-8 bg-background font-body">
       {!isSessionActive && (
         <div className="text-center hidden md:block">
           <h1 className="text-4xl md:text-5xl font-headline font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-blue-600 tracking-tight">
