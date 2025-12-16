@@ -345,6 +345,7 @@ export default function Home() {
     const fetchAyah = async () => {
       if (!settings || !isSessionActive) return;
       setIsDisplayVisible(false);
+      setAudioSrc('');
       setIsLoading(true);
 
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -408,6 +409,8 @@ export default function Home() {
 
     const playAudio = () => {
       audio.play().catch(e => {
+        // Ignore AbortError which happens when the source changes whie playing or loading
+        if (e.name === 'AbortError') return;
         console.error("Audio play error:", e);
         setPlayerState(p => ({ ...p, isPlaying: false }));
       });
