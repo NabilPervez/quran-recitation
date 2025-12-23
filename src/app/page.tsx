@@ -150,6 +150,11 @@ const AyahDisplay: FC<{ data: AyahData | null, isVisible: boolean }> = ({ data, 
             {data.english}
           </p>
         )}
+        {data.englishSecondary && (
+          <p className="text-lg md:text-xl text-muted-foreground border-t pt-4 mt-2 border-gray-100">
+            {data.englishSecondary}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -360,6 +365,8 @@ export default function Home() {
         if (!verse) throw new Error("Verse not found in API response");
 
         let englishTranslation = "Translation not available.";
+        let englishSecondaryTranslation = "";
+
         try {
           // English API call
           const englishResponse = await fetch(`http://api.alquran.cloud/v1/ayah/${settings.surah.id}:${playerState.currentAyah}/en.sahih`);
@@ -373,11 +380,25 @@ export default function Home() {
           console.error("Failed to fetch English translation:", e);
         }
 
+        try {
+          // Secondary English API call (QuranEnc)
+          const encResponse = await fetch(`https://quranenc.com/api/v1/translation/aya/english_saheeh/${settings.surah.id}/${playerState.currentAyah}`);
+          if (encResponse.ok) {
+            const encData = await encResponse.json();
+            if (encData.result && encData.result.translation) {
+              englishSecondaryTranslation = encData.result.translation;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch Secondary English translation:", e);
+        }
+
         const data: AyahData = {
           arabic: verse.ar,
           indonesian: verse.idn,
           transliteration: verse.tr,
           english: englishTranslation,
+          englishSecondary: englishSecondaryTranslation,
         };
 
         setAyahData(data);
