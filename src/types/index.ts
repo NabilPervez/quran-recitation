@@ -3,7 +3,6 @@ export type AyahData = {
   arabic: string;
   indonesian: string;
   english?: string;
-  englishSecondary?: string;
   transliteration?: string;
 };
 
