@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { surahs } from "@/lib/surahs";
 import type { AyahData, SurahInfo } from "@/types";
-import { ChevronsLeft, ChevronsRight, Loader2, Minus, Pause, Play, Plus, Repeat, Repeat1 } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Infinity, Loader2, Minus, Pause, Play, Plus, Repeat, Repeat1 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
 
 type SessionSettings = {
@@ -191,7 +191,7 @@ const AyahDisplay: FC<{ data: AyahData | null, isVisible: boolean }> = ({ data, 
 
   return (
     <Card className={`w-full max-w-5xl bg-white rounded-2xl shadow-sm border-2 border-gray-100 transition-opacity duration-500 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <CardContent className="p-6 md:p-10 text-center flex flex-col gap-8 min-h-[290px] justify-center">
+      <CardContent className="p-4 md:p-6 text-center flex flex-col gap-4 min-h-[290px] justify-center">
         <p className="font-headline text-4xl md:text-6xl lg:text-7xl leading-normal text-foreground" dir="rtl" lang="ar">
           {data.arabic}
         </p>
@@ -222,21 +222,23 @@ const PlayerControls: FC<{
   isAutoplayEnabled: boolean;
   onAutoplayChange: (enabled: boolean) => void;
 }> = ({ playerState, settings, onPlayPause, onNext, onPrevious, onRepeat, onSettingsChange, isAutoplayEnabled, onAutoplayChange }) => (
-  <div className="flex flex-col items-center gap-6 w-full max-w-md">
-    <div className="flex items-center justify-center gap-2">
+  <div className="flex flex-col items-center gap-4 w-full max-w-md">
+    <div className="flex items-center justify-center gap-4">
       <Button onClick={onPrevious} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground" disabled={playerState.currentAyah === settings.startAyah && playerState.currentSurahRep === 1}>
         <ChevronsLeft className="h-6 w-6" />
       </Button>
       <Button onClick={onPlayPause} size="lg" className="rounded-full h-16 w-16 bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white shadow-emerald-100 transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg">
         {playerState.isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8 ml-1" />}
       </Button>
-      <Button onClick={onNext} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
-        <ChevronsRight className="h-6 w-6" />
-      </Button>
-    </div>
-    <div className="flex items-center justify-center gap-2">
-      <Label htmlFor="autoplay-switch" className="text-muted-foreground text-sm">Autoplay</Label>
-      <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} />
+      <div className="flex items-center gap-2">
+        <Button onClick={onNext} variant="ghost" size="icon" className="text-accent-foreground/70 hover:text-accent-foreground">
+          <ChevronsRight className="h-6 w-6" />
+        </Button>
+        <div className="flex items-center gap-1">
+          <Infinity className={`h-4 w-4 ${isAutoplayEnabled ? "text-emerald-500" : "text-gray-400"}`} />
+          <Switch id="autoplay-switch" checked={isAutoplayEnabled} onCheckedChange={onAutoplayChange} className="scale-75 origin-left" />
+        </div>
+      </div>
     </div>
     <div className="flex items-center justify-center gap-8 w-full text-center">
       <div className="flex items-center gap-2">
@@ -260,9 +262,9 @@ const AyahTitle: FC<{ settings: SessionSettings | null, playerState: PlayerState
   if (!settings) return null;
 
   return (
-    <div className="text-center mb-6">
+    <div className="text-center mb-2">
       <h1 className="text-4xl md:text-5xl font-headline font-bold text-gray-900 tracking-tight">{settings.surah.englishName}</h1>
-      <p className="text-gray-600 text-lg mt-2">{settings.surah.name} : Ayah {playerState.currentAyah}</p>
+      <p className="text-gray-600 text-lg mt-1">{settings.surah.name} : Ayah {playerState.currentAyah}</p>
     </div>
   );
 }
@@ -557,7 +559,7 @@ export default function Home() {
             </div>
           )}
 
-          <div className="flex flex-col items-center justify-center gap-8 w-full">
+          <div className="flex flex-col items-center justify-center gap-4 w-full">
             <AyahDisplay data={ayahData} isVisible={isDisplayVisible && !isLoading} />
             <PlayerControls
               playerState={playerState}
@@ -570,7 +572,7 @@ export default function Home() {
               isAutoplayEnabled={isAutoplayEnabled}
               onAutoplayChange={setIsAutoplayEnabled}
             />
-            <Button onClick={handleSessionEnd} variant="destructive" className="mt-4">
+            <Button onClick={handleSessionEnd} variant="destructive" className="mt-2">
               End Session
             </Button>
           </div>
