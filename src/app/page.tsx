@@ -80,7 +80,7 @@ const SettingsForm: FC<{
             <SelectContent>
               {surahs.map(surah => (
                 <SelectItem key={surah.id} value={String(surah.id)}>
-                  {surah.id}. {surah.englishName} ({surah.name})
+                  {surah.id}. {surah.englishName} ({surah.name}) ({surah.totalAyahs} ayahs)
                 </SelectItem>
               ))}
             </SelectContent>
@@ -108,11 +108,67 @@ const SettingsForm: FC<{
         </div>
         <div className="space-y-2">
           <Label htmlFor="ayah-reps">Ayah Repetitions</Label>
-          <Input id="ayah-reps" type="number" value={ayahReps} onChange={e => setAyahReps(Number(e.target.value))} min="1" disabled={isSessionActive} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setAyahReps(Math.max(1, ayahReps - 1))}
+              disabled={isSessionActive}
+              className="shrink-0"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <Input
+              id="ayah-reps"
+              type="number"
+              value={ayahReps}
+              onChange={e => setAyahReps(Number(e.target.value))}
+              min="1"
+              disabled={isSessionActive}
+              className="text-center"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setAyahReps(ayahReps + 1)}
+              disabled={isSessionActive}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="surah-reps">Surah Repetitions</Label>
-          <Input id="surah-reps" type="number" value={surahReps} onChange={e => setSurahReps(Number(e.target.value))} min="1" disabled={isSessionActive} />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSurahReps(Math.max(1, surahReps - 1))}
+              disabled={isSessionActive}
+              className="shrink-0"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <Input
+              id="surah-reps"
+              type="number"
+              value={surahReps}
+              onChange={e => setSurahReps(Number(e.target.value))}
+              min="1"
+              disabled={isSessionActive}
+              className="text-center"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSurahReps(surahReps + 1)}
+              disabled={isSessionActive}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="md:col-span-2">
           <Button onClick={handleStart} disabled={isSessionActive} className="w-full bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-600 hover:to-blue-700 text-white rounded-xl shadow-emerald-100 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
