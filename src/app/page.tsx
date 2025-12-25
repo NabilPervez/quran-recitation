@@ -345,7 +345,7 @@ export default function Home() {
     const fetchAyah = async () => {
       if (!settings || !isSessionActive) return;
       setIsDisplayVisible(false);
-      setAudioSrc('');
+      // setAudioSrc(''); // Removed to prevent audio unmounting/resetting during transition
       setIsLoading(true);
 
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -417,7 +417,7 @@ export default function Home() {
       });
     };
 
-    if (playerState.isPlaying) {
+    if (playerState.isPlaying && !isLoading) {
       if (audio.currentSrc !== audioSrc) {
         audio.load();
         const handleDataLoaded = () => {
@@ -431,7 +431,7 @@ export default function Home() {
     } else {
       audio.pause();
     }
-  }, [playerState.isPlaying, audioSrc]);
+  }, [playerState.isPlaying, audioSrc, isLoading]);
 
   // Effect for handling repetitions
   useEffect(() => {
@@ -521,21 +521,20 @@ export default function Home() {
         </>
       )}
 
-      {audioSrc && (
-        <audio
-          ref={audioRef}
-          src={audioSrc}
-          onEnded={handleAudioEnd}
-          onPlay={() => {
-            if (!playerState.isPlaying) setPlayerState(p => ({ ...p, isPlaying: true }))
-          }}
-          onPause={() => {
-            if (playerState.isPlaying && !autoplayTimeoutRef.current) {
-              setPlayerState(p => ({ ...p, isPlaying: false }))
-            }
-          }}
-        />
-      )}
+      <audio
+        ref={audioRef}
+        src={audioSrc}
+        onEnded={handleAudioEnd}
+        onPlay={() => {
+          if (!playerState.isPlaying) setPlayerState(p => ({ ...p, isPlaying: true }))
+        }}
+        onPause={() => {
+          if (isLoading) return;
+          if (playerState.isPlaying && !autoplayTimeoutRef.current) {
+            setPlayerState(p => ({ ...p, isPlaying: false }))
+          }
+        }}
+      />
 
       <AlertDialog open={isSummaryOpen} onOpenChange={setIsSummaryOpen}>
         <AlertDialogContent>
