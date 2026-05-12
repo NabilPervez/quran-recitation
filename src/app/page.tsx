@@ -409,38 +409,34 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       try {
-        // Indonesian API call (unchanged)
-        const indoResponse = await fetch(`https://quran-api.santrikoding.com/api/surah/${settings.surah.id}`);
-        if (!indoResponse.ok) throw new Error("Network response for Indonesian API was not ok");
-        const surahData = await indoResponse.json();
+        const apiResponse = await fetch(`https://api.alquran.cloud/v1/ayah/${settings.surah.id}:${playerState.currentAyah}/editions/quran-uthmani,id.indonesian,en.transliteration,en.sahih,ar.alafasy`);
+        if (!apiResponse.ok) throw new Error("Network response for API was not ok");
 
-        const verse = surahData.ayat[playerState.currentAyah - 1];
-        if (!verse) throw new Error("Verse not found in API response");
+        const apiData = await apiResponse.json();
+        const editions = apiData.data;
 
-        let englishTranslation = "Translation not available.";
-
-        try {
-          // English API call (QuranEnc)
-          const encResponse = await fetch(`https://quranenc.com/api/v1/translation/aya/english_saheeh/${settings.surah.id}/${playerState.currentAyah}`);
-          if (encResponse.ok) {
-            const encData = await encResponse.json();
-            if (encData.result && encData.result.translation) {
-              englishTranslation = encData.result.translation;
-            }
-          }
-        } catch (e) {
-          console.error("Failed to fetch English translation:", e);
+        if (!editions || editions.length < 5) {
+          throw new Error("Incomplete data from API");
         }
 
+        const arabicVerse = editions.find((e: any) => e.edition.identifier === 'quran-uthmani');
+        const indoVerse = editions.find((e: any) => e.edition.identifier === 'id.indonesian');
+        const transliterationVerse = editions.find((e: any) => e.edition.identifier === 'en.transliteration');
+        const englishVerse = editions.find((e: any) => e.edition.identifier === 'en.sahih');
+        const audioVerse = editions.find((e: any) => e.edition.identifier === 'ar.alafasy');
+
         const data: AyahData = {
-          arabic: verse.ar,
-          indonesian: verse.idn,
-          transliteration: verse.tr,
-          english: englishTranslation,
+          arabic: arabicVerse?.text || '',
+          indonesian: indoVerse?.text || '',
+          transliteration: transliterationVerse?.text || '',
+          english: englishVerse?.text || 'Translation not available.',
         };
 
         setAyahData(data);
-        setAudioSrc(getAudioUrl(settings.surah.id, playerState.currentAyah));
+
+        // Use the audio URL from the API if available, otherwise fallback to the generated one
+        const audioUrl = audioVerse?.audio || getAudioUrl(settings.surah.id, playerState.currentAyah);
+        setAudioSrc(audioUrl);
       } catch (error) {
         console.error("Failed to fetch ayah data:", error);
         toast({
