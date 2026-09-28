@@ -1,23 +1,8 @@
 import type {NextConfig} from 'next';
 
+// Fully client-side app: export static files for Netlify.
 const nextConfig: NextConfig = {
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
+  output: 'export',
 };
 
 export default nextConfig;
