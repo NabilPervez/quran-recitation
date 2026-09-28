@@ -58,7 +58,8 @@ export default function Home() {
 
   const updatePrefs = useCallback((patch: Partial<DisplayPrefs>) => {
     setPrefs((prev) => {
-      const next = { ...prev, ...patch };
+      // fontScales patches carry only the changed layer.
+      const next = { ...prev, ...patch, fontScales: { ...prev.fontScales, ...patch.fontScales } };
       savePrefs(next);
       return next;
     });
@@ -136,6 +137,11 @@ export default function Home() {
           <ProgressView
             onRepeat={(log) => {
               const next = { ...settings, surahId: log.surahId, startAyah: log.startAyah, endAyah: log.endAyah };
+              updateSettings(next);
+              start(next);
+            }}
+            onPractice={(surahId, ayahs) => {
+              const next = { ...settings, surahId, startAyah: Math.min(...ayahs), endAyah: Math.max(...ayahs) };
               updateSettings(next);
               start(next);
             }}

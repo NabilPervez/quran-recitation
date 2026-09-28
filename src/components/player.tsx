@@ -5,9 +5,10 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useFitText } from "@/hooks/use-fit-text";
 import { useRecitationPlayer } from "@/hooks/use-recitation-player";
 import { BISMILLAH } from "@/lib/quran";
+import { recordListening } from "@/lib/storage";
 import { cn } from "@/lib/utils";
 import type { Ayah, DisplayPrefs, SessionSettings, SurahInfo } from "@/types";
-import { AlertCircle, ChevronLeft, Eye, Loader2, Pause, Play, RotateCcw, Settings2, SkipBack, SkipForward, X } from "lucide-react";
+import { AlertCircle, ChevronLeft, Loader2, Pause, Play, RotateCcw, Settings2, SkipBack, SkipForward, X } from "lucide-react";
 import { useEffect, useRef, useState, type FC } from "react";
 
 type Props = {
@@ -26,6 +27,7 @@ const repLabel = (n: number, total: number) => (total === 0 ? `${n} / ∞` : `${
 
 export const Player: FC<Props> = ({ surah, ayahs, settings, prefs, startAt, onSettingsChange, onPrefsChange, onPlayed, onExit }) => {
   const plays = useRef(0);
+  const touch = useRef<{ x: number; y: number } | null>(null);
   const { view, toggle, next, prev, goTo, retry } = useRecitationPlayer({
     surah,
     ayahs,
@@ -38,7 +40,11 @@ export const Player: FC<Props> = ({ surah, ayahs, settings, prefs, startAt, onSe
   });
   const [chrome, setChrome] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState({ arabic: false, translit: false });
+  const reveal = (layer: "arabic" | "translit") => {
+    touch.current = null;
+    setRevealed((r) => ({ ...r, [layer]: true }));
+  };
   const startedAt = useRef(Date.now());
 
   const ayah = ayahs[view.ayah - 1];
@@ -46,7 +52,23 @@ export const Player: FC<Props> = ({ surah, ayahs, settings, prefs, startAt, onSe
   const rangeLen = settings.endAyah - settings.startAyah + 1;
   const progress = ((view.ayah - settings.startAyah + (view.rep - 1) / Math.max(1, settings.ayahReps || view.rep)) / rangeLen) * 100;
 
-  useEffect(() => setRevealed(false), [view.ayah]);
+  useEffect(() => setRevealed({ arabic: false, translit: false }), [view.ayah]);
+
+  // Count listening time while audio plays (saved every 10s and when playback stops).
+  useEffect(() => {
+    if (!playing) return;
+    let last = Date.now();
+    const flush = () => {
+      const now = Date.now();
+      recordListening(now - last);
+      last = now;
+    };
+    const id = setInterval(flush, 10_000);
+    return () => {
+      clearInterval(id);
+      flush();
+    };
+  }, [playing]);
 
   // Keyboard: space = play/pause, arrows = prev/next, Escape = exit immersive.
   useEffect(() => {
@@ -62,12 +84,11 @@ export const Player: FC<Props> = ({ surah, ayahs, settings, prefs, startAt, onSe
   }, [toggle, next, prev, sheetOpen]);
 
   const { containerRef, contentRef } = useFitText<HTMLDivElement, HTMLDivElement>(
-    [ayah?.arabic, prefs.showTranslation, prefs.showTransliteration, prefs.fontScales.translit, prefs.fontScales.trans, chrome],
-    { min: 18, max: 160, scale: prefs.fontScales.arabic },
+    [ayah?.arabic, prefs.showArabic, prefs.showTranslation, prefs.showTransliteration, chrome],
+    { min: 12, max: 160 },
   );
 
   // Swipe left/right on the text for next/previous.
-  const touch = useRef<{ x: number; y: number } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => (touch.current = { x: e.clientX, y: e.clientY });
   const onPointerUp = (e: React.PointerEvent) => {
     const t = touch.current;
@@ -160,43 +181,45 @@ export const Player: FC<Props> = ({ surah, ayahs, settings, prefs, startAt, onSe
         ref={containerRef}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
-        className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 md:px-12 land:py-3 touch-pan-y"
+        style={
+          {
+            "--fs-ar": prefs.fontScales.arabic,
+            "--fs-tl": prefs.fontScales.translit,
+            "--fs-tr": prefs.fontScales.trans,
+          } as React.CSSProperties
+        }
+        className="relative flex flex-1 min-h-0 flex-col overflow-y-auto overscroll-contain px-5 py-4 md:px-12 land:py-3 touch-pan-y"
       >
         {ayah ? (
-          <div ref={contentRef} key={view.ayah} className="min-h-full flex flex-col justify-center gap-[0.35em] text-center animate-in fade-in [animation-duration:300ms] transition-none">
-            {view.ayah === 1 && surah.id !== 1 && surah.id !== 9 && (
-              <p className="arabic text-[clamp(18px,0.4em,34px)] text-muted-foreground" dir="rtl" lang="ar">
+          // my-auto (not justify-center) so enlarged text scrolls instead of being cut off at the top.
+          <div ref={contentRef} key={view.ayah} className="my-auto flex w-full flex-col gap-[0.35em] text-center animate-in fade-in [animation-duration:300ms] transition-none">
+            {prefs.showArabic && view.ayah === 1 && surah.id !== 1 && surah.id !== 9 && (
+              <p className="arabic text-muted-foreground" style={{ fontSize: "calc(clamp(18px, 0.4em, 34px) * var(--fs-ar))" }} dir="rtl" lang="ar">
                 {BISMILLAH}
               </p>
             )}
-            <p
-              dir="rtl"
-              lang="ar"
-              onPointerUp={(e) => {
-                if (prefs.testMode && !revealed) {
-                  e.stopPropagation();
-                  touch.current = null;
-                  setRevealed(true);
-                }
-              }}
-              className={cn(
-                "arabic text-[1em] transition-[filter] duration-300",
-                prefs.testMode && !revealed && "blur-[0.35em] cursor-pointer",
-              )}
-            >
-              {ayah.arabic}
-              <span className="inline-block mx-[0.2em] text-[0.6em] text-gold align-middle">﴿{view.ayah.toLocaleString("ar-EG")}﴾</span>
-            </p>
-            {prefs.testMode && !revealed && (
-              <p className="text-[clamp(13px,0.22em,18px)] text-muted-foreground inline-flex items-center justify-center gap-1">
-                <Eye className="h-4 w-4" /> Tap the verse to reveal
-              </p>
+            {prefs.showArabic && (
+              <Blurrable blurred={prefs.blurArabic && !revealed.arabic} onReveal={() => reveal("arabic")} label="Tap to reveal the Arabic">
+                <p dir="rtl" lang="ar" className="arabic" style={{ fontSize: "calc(1em * var(--fs-ar))" }}>
+                  {ayah.arabic}
+                  <span className="inline-block mx-[0.2em] text-[0.6em] text-gold align-middle">﴿{view.ayah.toLocaleString("ar-EG")}﴾</span>
+                </p>
+              </Blurrable>
             )}
             {prefs.showTransliteration && ayah.transliteration && (
-              <p className="italic text-muted-foreground leading-snug" style={{ fontSize: `calc(clamp(15px, 0.3em, 28px) * ${prefs.fontScales.translit})` }}>{ayah.transliteration}</p>
+              <Blurrable blurred={prefs.blurTranslit && !revealed.translit} onReveal={() => reveal("translit")} label="Tap to reveal the transliteration">
+                <p className="italic text-muted-foreground leading-snug" style={{ fontSize: "calc(clamp(15px, 0.3em, 28px) * var(--fs-tl))" }}>
+                  {ayah.transliteration}
+                </p>
+              </Blurrable>
             )}
             {prefs.showTranslation && ayah.english && (
-              <p className="font-body text-foreground/80 leading-snug max-w-[60ch] mx-auto" style={{ fontSize: `calc(clamp(16px, 0.32em, 30px) * ${prefs.fontScales.trans})` }}>{ayah.english}</p>
+              <p className="font-body text-foreground/80 leading-snug max-w-[60ch] mx-auto" style={{ fontSize: "calc(clamp(16px, 0.32em, 30px) * var(--fs-tr))" }}>
+                {ayah.english}
+              </p>
+            )}
+            {!prefs.showArabic && !prefs.showTransliteration && !prefs.showTranslation && (
+              <p className="text-base text-muted-foreground">Listening only — turn text back on in settings.</p>
             )}
           </div>
         ) : null}
@@ -279,3 +302,26 @@ export const Player: FC<Props> = ({ surah, ayahs, settings, prefs, startAt, onSe
     </div>
   );
 };
+
+/** Blurs its content until tapped ("Test me"). */
+const Blurrable: FC<{ blurred: boolean; onReveal: () => void; label: string; children: React.ReactNode }> = ({ blurred, onReveal, label, children }) => (
+  <div
+    onPointerUp={(e) => {
+      if (!blurred) return;
+      e.stopPropagation();
+      onReveal();
+    }}
+    className={cn("relative", blurred && "cursor-pointer select-none")}
+    aria-label={blurred ? label : undefined}
+    role={blurred ? "button" : undefined}
+  >
+    <div className={cn("transition-[filter] duration-300", blurred && "blur-[8px]")} aria-hidden={blurred || undefined}>
+      {children}
+    </div>
+    {blurred && (
+      <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border bg-card/90 px-3 py-1 font-body text-xs font-semibold text-muted-foreground shadow-sm">
+        Tap to reveal
+      </span>
+    )}
+  </div>
+);

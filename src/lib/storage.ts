@@ -11,9 +11,11 @@ export const DEFAULT_SETTINGS: SessionSettings = {
 };
 
 export const DEFAULT_PREFS: DisplayPrefs = {
+  showArabic: true,
   showTranslation: true,
   showTransliteration: false,
-  testMode: false,
+  blurArabic: false,
+  blurTranslit: false,
   fontScales: DEFAULT_FONT_SCALES,
   theme: "light",
 };
@@ -38,7 +40,9 @@ function write(key: string, value: unknown) {
 export const loadSettings = () => read("ae:settings", DEFAULT_SETTINGS);
 export const saveSettings = (s: SessionSettings) => write("ae:settings", s);
 export function loadPrefs(): DisplayPrefs {
-  const p = read("ae:prefs", DEFAULT_PREFS);
+  const p = read("ae:prefs", DEFAULT_PREFS) as DisplayPrefs & { testMode?: boolean };
+  if (p.testMode) p.blurArabic = true; // migrate the old single "Test me" switch
+  delete p.testMode;
   const f = { ...DEFAULT_FONT_SCALES, ...(p.fontScales ?? {}) };
   return {
     ...p,
@@ -77,19 +81,39 @@ export type Progress = {
   sessions: SessionLog[]; // newest first, capped
   ayahPlays: Record<string, number>; // "surah:ayah" -> times heard
   days: string[]; // YYYY-MM-DD with any listening, newest first
+  dayPlays: Record<string, number>; // YYYY-MM-DD -> recitations heard
+  dayMs: Record<string, number>; // YYYY-MM-DD -> ms of audio playing
+  hourMs: number[]; // 24 buckets: when in the day you listen
 };
 
-const EMPTY_PROGRESS: Progress = { sessions: [], ayahPlays: {}, days: [] };
+const EMPTY_PROGRESS: Progress = { sessions: [], ayahPlays: {}, days: [], dayPlays: {}, dayMs: {}, hourMs: Array(24).fill(0) };
 
 export const loadProgress = (): Progress => structuredClone(read("ae:progress", EMPTY_PROGRESS));
 
-const today = () => new Date().toLocaleDateString("en-CA");
+export const dateKey = (d: Date = new Date()) => d.toLocaleDateString("en-CA");
+const today = () => dateKey();
+
+const markDay = (p: Progress) => {
+  if (p.days[0] !== today()) p.days = [today(), ...p.days].slice(0, 400);
+};
 
 export function recordPlay(surahId: number, ayah: number) {
   const p = loadProgress();
   const key = `${surahId}:${ayah}`;
   p.ayahPlays[key] = (p.ayahPlays[key] ?? 0) + 1;
-  if (p.days[0] !== today()) p.days = [today(), ...p.days].slice(0, 400);
+  p.dayPlays[today()] = (p.dayPlays[today()] ?? 0) + 1;
+  markDay(p);
+  write("ae:progress", p);
+}
+
+/** Add listening time (called periodically while audio is playing). */
+export function recordListening(ms: number) {
+  if (ms <= 0) return;
+  const p = loadProgress();
+  p.dayMs[today()] = (p.dayMs[today()] ?? 0) + ms;
+  if (p.hourMs.length !== 24) p.hourMs = Array(24).fill(0);
+  p.hourMs[new Date().getHours()] += ms;
+  markDay(p);
   write("ae:progress", p);
 }
 

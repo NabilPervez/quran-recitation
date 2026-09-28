@@ -48,6 +48,16 @@ on phones and tablets, portrait and landscape.
 - [x] Installable (web manifest + icon)
 - [x] New Netlify site
 
+## Phase 3 — feedback round
+
+- [x] Arabic can be turned off (like translation / transliteration); "listening only" message if all layers are off
+- [x] Reading size range widened to 50–300% with sliders as well as A−/A+
+- [x] Font size bug: layers were fitted together, so enlarging one shrank the others. Now fit at 100% and apply sizes on top (verified: translation 18→35px with Arabic unchanged)
+- [x] Test me: separate "Blur the Arabic" and "Blur the transliteration", tap each to reveal
+- [x] Progress numbers in DM Sans with tabular figures
+- [x] Analytics modelled on Lift Moar: Consistency heatmap, Quick Read callouts (GOOD / WATCH / FLAG), last-14-days chart, per-surah most/least repeated + "Practise weakest", per-day listening time
+- [x] React 19 (fixes hydration error #418 on the live site)
+
 ## Later ideas
 - Per-ayah "memorised" marks and spaced-repetition review queue
 - Choice of reciter; record-and-compare

@@ -30,9 +30,12 @@ export type SessionSettings = {
 export type Theme = "light" | "sepia" | "dark";
 
 export type DisplayPrefs = {
+  showArabic: boolean;
   showTranslation: boolean;
   showTransliteration: boolean;
-  testMode: boolean;
+  /** "Test me": blur a layer until tapped. */
+  blurArabic: boolean;
+  blurTranslit: boolean;
   fontScales: FontScales;
   theme: Theme;
 };

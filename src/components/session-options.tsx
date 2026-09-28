@@ -169,13 +169,21 @@ const THEMES: { value: Theme; label: string }[] = [
 
 export const DisplayOptions: FC<{ prefs: DisplayPrefs; onChange: (patch: Partial<DisplayPrefs>) => void }> = ({ prefs, onChange }) => (
   <div className="space-y-3">
-    <Toggle label="Translation" checked={prefs.showTranslation} onChange={(v) => onChange({ showTranslation: v })} />
+    <Toggle label="Arabic" checked={prefs.showArabic} onChange={(v) => onChange({ showArabic: v })} />
     <Toggle label="Transliteration" checked={prefs.showTransliteration} onChange={(v) => onChange({ showTransliteration: v })} />
+    <Toggle label="Translation" checked={prefs.showTranslation} onChange={(v) => onChange({ showTranslation: v })} />
+    <p className="eyebrow pt-2">Test me</p>
     <Toggle
-      label="Test me"
-      hint="Blur the Arabic — tap it to check yourself"
-      checked={prefs.testMode}
-      onChange={(v) => onChange({ testMode: v })}
+      label="Blur the Arabic"
+      hint="Recite from memory, tap to check"
+      checked={prefs.blurArabic}
+      onChange={(v) => onChange({ blurArabic: v, showArabic: v ? true : prefs.showArabic })}
+    />
+    <Toggle
+      label="Blur the transliteration"
+      hint="Tap to check"
+      checked={prefs.blurTranslit}
+      onChange={(v) => onChange({ blurTranslit: v, showTransliteration: v ? true : prefs.showTransliteration })}
     />
     <ReadingSize prefs={prefs} onChange={onChange} />
     <Field label="Theme">
@@ -189,7 +197,7 @@ export const ReadingSize: FC<{ prefs: DisplayPrefs; onChange: (patch: Partial<Di
   const f = prefs.fontScales;
   const changed = FONT_LAYERS.some(({ key }) => f[key] !== 1);
   return (
-    <Field label="Reading size" hint="On top of auto-fit">
+    <Field label="Reading size" hint="50–300%, on top of auto-fit">
       <div className="rounded-xl border bg-background p-4 text-center">
         <p dir="rtl" lang="ar" className="arabic" style={{ fontSize: `${28 * f.arabic}px` }}>
           قُلْ هُوَ ٱللَّهُ أَحَدٌ
@@ -204,9 +212,10 @@ export const ReadingSize: FC<{ prefs: DisplayPrefs; onChange: (patch: Partial<Di
       <div className="space-y-2 pt-1">
         {FONT_LAYERS.map(({ key, label }) => {
           const value = f[key];
-          const step = (dir: number) => onChange({ fontScales: { ...f, [key]: clampFontScale(value + dir * FONT_SCALE_STEP) } });
+          const step = (dir: number) => onChange({ fontScales: { [key]: clampFontScale(value + dir * FONT_SCALE_STEP) } as DisplayPrefs["fontScales"] });
           return (
-            <div key={key} className="flex items-center justify-between gap-3">
+            <div key={key} className="space-y-1.5">
+              <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-medium">{label}</span>
               <div className="flex items-center gap-2">
                 <button
@@ -229,6 +238,17 @@ export const ReadingSize: FC<{ prefs: DisplayPrefs; onChange: (patch: Partial<Di
                   A+
                 </button>
               </div>
+              </div>
+              <input
+                type="range"
+                aria-label={`${label} size`}
+                min={FONT_SCALE_MIN}
+                max={FONT_SCALE_MAX}
+                step={FONT_SCALE_STEP}
+                value={value}
+                onChange={(e) => onChange({ fontScales: { [key]: clampFontScale(Number(e.target.value)) } as DisplayPrefs["fontScales"] })}
+                className="w-full accent-[hsl(var(--primary))]"
+              />
             </div>
           );
         })}

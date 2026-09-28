@@ -1,9 +1,9 @@
-// Reader font scaling — ported from Quran Reflection (src/lib/fonts.js).
+// Reader font scaling — ported from Quran Reflection (src/lib/fonts.js), with a wider range.
 // Each layer's size is a multiplier on top of the auto-fitted / responsive base size,
 // so it stays sensible across phone, tablet and orientation.
 
-export const FONT_SCALE_MIN = 0.8;
-export const FONT_SCALE_MAX = 1.8;
+export const FONT_SCALE_MIN = 0.5;
+export const FONT_SCALE_MAX = 3;
 export const FONT_SCALE_STEP = 0.1;
 
 export type FontLayer = "arabic" | "translit" | "trans";

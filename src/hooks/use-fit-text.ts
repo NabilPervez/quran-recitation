@@ -2,6 +2,9 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 
+/** Per-layer size multipliers set by the reader (see Player). */
+const SCALE_VARS = ["--fs-ar", "--fs-tl", "--fs-tr"];
+
 /** Height the children need, ignoring any stretching of the (flex) content box itself. */
 function naturalHeight(el: HTMLElement) {
   const kids = Array.from(el.children) as HTMLElement[];
@@ -16,7 +19,7 @@ function naturalHeight(el: HTMLElement) {
  */
 export function useFitText<C extends HTMLElement, T extends HTMLElement>(
   deps: unknown[],
-  { min = 14, max = 140, scale = 1 }: { min?: number; max?: number; scale?: number } = {},
+  { min = 14, max = 140 }: { min?: number; max?: number } = {},
 ) {
   const containerRef = useRef<C>(null);
   const contentRef = useRef<T>(null);
@@ -34,6 +37,9 @@ export function useFitText<C extends HTMLElement, T extends HTMLElement>(
       container.style.overflowY = "hidden";
       const cs = getComputedStyle(container);
       const availH = container.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      // Fit at 100% for every layer; the user's per-layer sizes (CSS vars) apply on top,
+      // so changing one layer never silently shrinks another.
+      for (const v of SCALE_VARS) content.style.setProperty(v, "1");
       if (availH > 0) {
         let lo = min;
         let hi = max;
@@ -43,11 +49,10 @@ export function useFitText<C extends HTMLElement, T extends HTMLElement>(
           if (naturalHeight(content) <= availH) lo = mid;
           else hi = mid;
         }
-        // Scale is a user preference on top of the fitted size; it may overflow (then the area scrolls).
-        const final = Math.max(min, lo * scale);
-        content.style.fontSize = `${final}px`;
-        setSize(final);
+        content.style.fontSize = `${lo}px`;
+        setSize(lo);
       }
+      for (const v of SCALE_VARS) content.style.removeProperty(v);
       container.style.overflowY = prevOverflow;
       last = { w: container.clientWidth, h: container.clientHeight };
     };
@@ -64,7 +69,7 @@ export function useFitText<C extends HTMLElement, T extends HTMLElement>(
     document.fonts?.ready.then(fit).catch(() => {});
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, min, max, scale]);
+  }, [...deps, min, max]);
 
   return { containerRef, contentRef, size };
 }
