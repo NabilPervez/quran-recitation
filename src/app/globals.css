@@ -5,94 +5,72 @@
 
 @layer base {
   :root {
-    --background: 150 80% 99%;
-    --foreground: 161 94% 15%;
+    /* Shared with Quran Reflection / Hadith Reflection: warm paper, ink, gold. */
+    --background: 60 14% 98%;
+    --foreground: 40 6% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 161 94% 15%;
+    --card-foreground: 40 6% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 161 94% 15%;
-    --primary: 158 84% 39%;
+    --popover-foreground: 40 6% 10%;
+    --primary: 43 68% 32%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 150 50% 96%;
-    --secondary-foreground: 161 94% 20%;
-    --muted: 150 30% 96%;
-    --muted-foreground: 161 40% 40%;
-    --accent: 150 50% 94%;
-    --accent-foreground: 161 94% 15%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 150 30% 90%;
-    --input: 150 30% 90%;
-    --ring: 158 84% 39%;
-    --chart-1: 158 84% 39%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 1rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --secondary: 43 36% 94%;
+    --secondary-foreground: 40 6% 10%;
+    --muted: 43 36% 94%;
+    --muted-foreground: 33 6% 35%;
+    --accent: 44 60% 93%;
+    --accent-foreground: 40 6% 10%;
+    --destructive: 7 50% 47%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 22% 89%;
+    --input: 40 22% 89%;
+    --ring: 44 54% 54%;
+    --gold: 44 54% 54%;
+    --radius: 1.25rem;
   }
 
   .sepia {
     --background: 39 45% 90%;
-    --foreground: 30 35% 16%;
+    --foreground: 30 35% 14%;
     --card: 39 50% 94%;
-    --card-foreground: 30 35% 16%;
+    --card-foreground: 30 35% 14%;
     --popover: 39 50% 94%;
-    --popover-foreground: 30 35% 16%;
-    --primary: 28 55% 36%;
+    --popover-foreground: 30 35% 14%;
+    --primary: 36 62% 30%;
     --primary-foreground: 39 60% 96%;
     --secondary: 38 35% 84%;
-    --secondary-foreground: 30 35% 16%;
-    --muted: 38 35% 84%;
-    --muted-foreground: 30 20% 36%;
-    --accent: 38 35% 82%;
-    --accent-foreground: 30 35% 16%;
-    --border: 36 25% 76%;
-    --input: 36 25% 76%;
-    --ring: 28 55% 36%;
+    --secondary-foreground: 30 35% 14%;
+    --muted: 38 35% 86%;
+    --muted-foreground: 30 20% 34%;
+    --accent: 38 40% 84%;
+    --accent-foreground: 30 35% 14%;
+    --border: 36 25% 78%;
+    --input: 36 25% 78%;
+    --ring: 40 55% 45%;
+    --gold: 40 55% 45%;
   }
 
   .dark {
-    --background: 161 94% 5%;
-    --foreground: 150 50% 98%;
-    --card: 161 94% 8%;
-    --card-foreground: 150 50% 98%;
-    --popover: 161 94% 8%;
-    --popover-foreground: 150 50% 98%;
-    --primary: 158 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 161 50% 15%;
-    --secondary-foreground: 150 50% 98%;
-    --muted: 161 50% 15%;
-    --muted-foreground: 150 30% 65%;
-    --accent: 161 50% 15%;
-    --accent-foreground: 150 50% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 161 50% 15%;
-    --input: 161 50% 15%;
-    --ring: 158 84% 39%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 40 8% 7.5%;
+    --foreground: 40 24% 91%;
+    --card: 36 9% 11%;
+    --card-foreground: 40 24% 91%;
+    --popover: 36 9% 11%;
+    --popover-foreground: 40 24% 91%;
+    --primary: 44 60% 66%;
+    --primary-foreground: 40 8% 7.5%;
+    --secondary: 40 9% 14%;
+    --secondary-foreground: 40 24% 91%;
+    --muted: 40 9% 14%;
+    --muted-foreground: 37 8% 63%;
+    --accent: 42 25% 17%;
+    --accent-foreground: 40 24% 91%;
+    --destructive: 7 66% 68%;
+    --destructive-foreground: 40 8% 7.5%;
+    --border: 40 9% 19%;
+    --input: 40 9% 19%;
+    --ring: 44 58% 60%;
+    --gold: 44 58% 60%;
   }
 }
 
@@ -109,8 +87,15 @@
 }
 
 @layer utilities {
+  /* Small gold caps label used above titles across the family of apps. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-primary;
+  }
+  .card-soft {
+    @apply rounded-[1.25rem] border bg-card shadow-[0_4px_24px_rgba(60,45,10,0.06)];
+  }
   .arabic {
-    font-family: 'Amiri Quran', 'Amiri', 'Scheherazade New', serif;
+    font-family: 'Amiri', 'Noto Naskh Arabic', serif;
     line-height: 1.9;
     word-spacing: 0.08em;
   }
@@ -120,4 +105,7 @@
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

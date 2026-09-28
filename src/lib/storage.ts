@@ -1,3 +1,4 @@
+import { DEFAULT_FONT_SCALES, clampFontScale } from "@/lib/fonts";
 import type { DisplayPrefs, SessionSettings } from "@/types";
 
 export const DEFAULT_SETTINGS: SessionSettings = {
@@ -13,7 +14,7 @@ export const DEFAULT_PREFS: DisplayPrefs = {
   showTranslation: true,
   showTransliteration: false,
   testMode: false,
-  textScale: 1,
+  fontScales: DEFAULT_FONT_SCALES,
   theme: "light",
 };
 
@@ -36,7 +37,14 @@ function write(key: string, value: unknown) {
 
 export const loadSettings = () => read("ae:settings", DEFAULT_SETTINGS);
 export const saveSettings = (s: SessionSettings) => write("ae:settings", s);
-export const loadPrefs = () => read("ae:prefs", DEFAULT_PREFS);
+export function loadPrefs(): DisplayPrefs {
+  const p = read("ae:prefs", DEFAULT_PREFS);
+  const f = { ...DEFAULT_FONT_SCALES, ...(p.fontScales ?? {}) };
+  return {
+    ...p,
+    fontScales: { arabic: clampFontScale(f.arabic), translit: clampFontScale(f.translit), trans: clampFontScale(f.trans) },
+  };
+}
 export const savePrefs = (p: DisplayPrefs) => write("ae:prefs", p);
 
 export function loadPosition(): SavedPosition | null {
@@ -53,3 +61,58 @@ export const clearPosition = () => {
     localStorage.removeItem("ae:position");
   } catch {}
 };
+
+// ---------- Progress ----------
+
+export type SessionLog = {
+  surahId: number;
+  startAyah: number;
+  endAyah: number;
+  listenedMs: number;
+  plays: number;
+  endedAt: number;
+};
+
+export type Progress = {
+  sessions: SessionLog[]; // newest first, capped
+  ayahPlays: Record<string, number>; // "surah:ayah" -> times heard
+  days: string[]; // YYYY-MM-DD with any listening, newest first
+};
+
+const EMPTY_PROGRESS: Progress = { sessions: [], ayahPlays: {}, days: [] };
+
+export const loadProgress = (): Progress => structuredClone(read("ae:progress", EMPTY_PROGRESS));
+
+const today = () => new Date().toLocaleDateString("en-CA");
+
+export function recordPlay(surahId: number, ayah: number) {
+  const p = loadProgress();
+  const key = `${surahId}:${ayah}`;
+  p.ayahPlays[key] = (p.ayahPlays[key] ?? 0) + 1;
+  if (p.days[0] !== today()) p.days = [today(), ...p.days].slice(0, 400);
+  write("ae:progress", p);
+}
+
+export function recordSession(log: SessionLog) {
+  if (log.plays === 0 && log.listenedMs < 30_000) return;
+  const p = loadProgress();
+  p.sessions = [log, ...p.sessions].slice(0, 100);
+  write("ae:progress", p);
+}
+
+/** Consecutive days (ending today or yesterday) with listening. */
+export function streak(days: string[]) {
+  if (!days.length) return 0;
+  const d = new Date();
+  let count = 0;
+  const fmt = (x: Date) => x.toLocaleDateString("en-CA");
+  if (days[0] !== fmt(d)) d.setDate(d.getDate() - 1);
+  const set = new Set(days);
+  while (set.has(fmt(d))) {
+    count++;
+    d.setDate(d.getDate() - 1);
+  }
+  return count;
+}
+
+export const clearProgress = () => write("ae:progress", EMPTY_PROGRESS);

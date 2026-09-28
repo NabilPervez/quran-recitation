@@ -34,6 +34,20 @@ on phones and tablets, portrait and landscape.
 - [x] Verify in browser (phone portrait, phone landscape, tablet) and `next build`
 - [x] Commit and push
 
+## Phase 2 — match the family (Quran Reflection, Hadith Reflection, Quran Memorization)
+
+- [x] Shared design tokens: warm paper background, ink text, gold accent, Cormorant Garamond + DM Sans + Amiri, light/sepia/dark
+- [x] Gold eyebrow labels, serif page titles, soft bordered cards
+- [x] Bottom tab bar: Listen / Progress / Settings
+- [x] Progress tab: day streak, recitations, minutes, per-surah coverage, recent sessions ("Again")
+- [x] Settings tab: reading options, gestures help, reset data
+- [x] Data: same surah-level alquran.cloud request as Quran Memorization (`ar.alafasy, quran-uthmani, en.transliteration, en.sahih`); audio URLs + mirrors from the API as in Quran Reflection
+- [x] Arabic font: Amiri, as in the sibling apps; robust Bismillah stripping
+- [x] Reading size per layer (Arabic / transliteration / translation, 80–180%) ported from Quran Reflection's `fonts.js`, with live preview
+- [x] Fixed auto-fit bugs (font-size transition + scrollbar feedback loop)
+- [x] Installable (web manifest + icon)
+- [x] New Netlify site
+
 ## Later ideas
 - Per-ayah "memorised" marks and spaced-repetition review queue
 - Choice of reciter; record-and-compare

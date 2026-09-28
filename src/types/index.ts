@@ -1,6 +1,10 @@
+import type { FontScales } from "@/lib/fonts";
+
 export type Ayah = {
   numberInSurah: number;
   globalNumber: number;
+  /** Primary recitation URL followed by mirror URLs. */
+  audio: string[];
   arabic: string;
   english: string;
   transliteration: string;
@@ -29,6 +33,6 @@ export type DisplayPrefs = {
   showTranslation: boolean;
   showTransliteration: boolean;
   testMode: boolean;
-  textScale: number;
+  fontScales: FontScales;
   theme: Theme;
 };

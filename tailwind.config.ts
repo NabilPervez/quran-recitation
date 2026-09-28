@@ -14,13 +14,14 @@ export default {
         land: { raw: '(orientation: landscape) and (max-height: 600px)' },
       },
       fontFamily: {
-        body: ['Alegreya', 'serif'],
-        headline: ['Alegreya', 'serif'],
+        body: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        headline: ['"Cormorant Garamond"', 'Georgia', 'serif'],
         code: ['monospace'],
         arabic: ['Amiri', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
+        gold: 'hsl(var(--gold))',
         foreground: 'hsl(var(--foreground))',
         card: {
           DEFAULT: 'hsl(var(--card))',

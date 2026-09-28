@@ -1,6 +1,5 @@
 "use client";
 
-import { audioUrl } from "@/lib/quran";
 import { savePosition } from "@/lib/storage";
 import type { Ayah, SessionSettings, SurahInfo } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -19,22 +18,29 @@ type Args = {
   ayahs: Ayah[];
   settings: SessionSettings;
   startAt?: { ayah: number; loop: number };
+  /** Called each time an ayah finishes playing through. */
+  onPlayed?: (ayah: number) => void;
 };
 
 /**
  * Playback state machine. All transitions happen inside audio event handlers using refs,
  * so repeats keep working while the page is in the background or the phone is locked.
  */
-export function useRecitationPlayer({ surah, ayahs, settings, startAt }: Args) {
+export function useRecitationPlayer({ surah, ayahs, settings, startAt, onPlayed }: Args) {
+  const onPlayedRef = useRef(onPlayed);
+  onPlayedRef.current = onPlayed;
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const gapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ayahsRef = useRef(ayahs);
+  ayahsRef.current = ayahs;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
   const pos = useRef({ ayah: startAt?.ayah ?? settings.startAyah, rep: 1, loop: startAt?.loop ?? 1 });
   const [view, setView] = useState<PlayerView>({ ...pos.current, status: "idle" });
   const statusRef = useRef<PlayerStatus>("idle");
+  const mirror = useRef(0); // index into the current ayah's audio URLs
 
   const publish = useCallback((status?: PlayerStatus) => {
     if (status) statusRef.current = status;
@@ -55,7 +61,7 @@ export function useRecitationPlayer({ surah, ayahs, settings, startAt }: Args) {
     if (!a) return;
     const el = preloadRef.current ?? new Audio();
     el.preload = "auto";
-    el.src = audioUrl(a.globalNumber);
+    el.src = a.audio[0];
     preloadRef.current = el;
   }, [ayahData]);
 
@@ -65,7 +71,8 @@ export function useRecitationPlayer({ surah, ayahs, settings, startAt }: Args) {
       const audio = audioRef.current;
       const a = ayahData(pos.current.ayah);
       if (!audio || !a) return;
-      const url = audioUrl(a.globalNumber);
+      mirror.current = 0;
+      const url = a.audio[0];
       if (audio.src !== url) audio.src = url;
       else audio.currentTime = 0;
       savePosition({ settings: settingsRef.current, ayah: pos.current.ayah, loop: pos.current.loop, savedAt: Date.now() });
@@ -149,6 +156,7 @@ export function useRecitationPlayer({ surah, ayahs, settings, startAt }: Args) {
     const p = pos.current;
     const audio = audioRef.current;
     if (!audio) return;
+    onPlayedRef.current?.(p.ayah);
 
     const advance = () => {
       gapTimer.current = null;
@@ -185,7 +193,16 @@ export function useRecitationPlayer({ surah, ayahs, settings, startAt }: Args) {
     const onPlaying = () => publish("playing");
     const onWaiting = () => publish("buffering");
     const onError = () => {
-      if (audio.src) publish("error");
+      if (!audio.src) return;
+      // Try the API's mirror URLs before giving up.
+      const urls = ayahsRef.current[pos.current.ayah - 1]?.audio ?? [];
+      if (mirror.current + 1 < urls.length) {
+        mirror.current += 1;
+        audio.src = urls[mirror.current];
+        audio.play().catch(() => {});
+        return;
+      }
+      publish("error");
     };
     // Paused from outside the app (headphones unplugged, OS controls).
     const onPause = () => {

@@ -1,7 +1,10 @@
 "use client";
 
 import { Player } from "@/components/player";
+import { ProgressView } from "@/components/progress-view";
+import { SettingsView } from "@/components/settings-view";
 import { Setup } from "@/components/setup";
+import { TabBar, type Tab } from "@/components/tab-bar";
 import { useToast } from "@/hooks/use-toast";
 import { fetchSurah } from "@/lib/quran";
 import {
@@ -11,6 +14,8 @@ import {
   loadPosition,
   loadPrefs,
   loadSettings,
+  recordPlay,
+  recordSession,
   savePrefs,
   saveSettings,
   type SavedPosition,
@@ -27,6 +32,7 @@ export default function Home() {
   const [resume, setResume] = useState<SavedPosition | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState<Tab>("listen");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -76,7 +82,15 @@ export default function Home() {
     }
   };
 
-  const exit = (listenedMs: number) => {
+  const exit = (listenedMs: number, plays: number) => {
+    recordSession({
+      surahId: settings.surahId,
+      startAyah: settings.startAyah,
+      endAyah: settings.endAyah,
+      listenedMs,
+      plays,
+      endedAt: Date.now(),
+    });
     setSession(null);
     setResume(loadPosition());
     const mins = Math.round(listenedMs / 60000);
@@ -93,27 +107,43 @@ export default function Home() {
         startAt={session.startAt}
         onSettingsChange={updateSettings}
         onPrefsChange={updatePrefs}
+        onPlayed={(n) => recordPlay(settings.surahId, n)}
         onExit={exit}
       />
     );
   }
 
   return (
-    <Setup
-      settings={settings}
-      prefs={prefs}
-      resume={resume}
-      loading={loading}
-      onSettingsChange={updateSettings}
-      onPrefsChange={updatePrefs}
-      onStart={() => {
-        clearPosition();
-        start(settings);
-      }}
-      onResume={(p) => {
-        updateSettings(p.settings);
-        start(p.settings, { ayah: p.ayah, loop: p.loop });
-      }}
-    />
+    <div className="min-h-[100dvh] bg-background pt-[env(safe-area-inset-top)]">
+      <main className="mx-auto max-w-5xl px-4 pb-44 pt-8 md:pt-12">
+        {tab === "listen" && (
+          <Setup
+            settings={settings}
+            resume={resume}
+            loading={loading}
+            onSettingsChange={updateSettings}
+            onStart={() => {
+              clearPosition();
+              start(settings);
+            }}
+            onResume={(p) => {
+              updateSettings(p.settings);
+              start(p.settings, { ayah: p.ayah, loop: p.loop });
+            }}
+          />
+        )}
+        {tab === "progress" && (
+          <ProgressView
+            onRepeat={(log) => {
+              const next = { ...settings, surahId: log.surahId, startAyah: log.startAyah, endAyah: log.endAyah };
+              updateSettings(next);
+              start(next);
+            }}
+          />
+        )}
+        {tab === "settings" && <SettingsView prefs={prefs} onPrefsChange={updatePrefs} />}
+      </main>
+      <TabBar tab={tab} onChange={setTab} />
+    </div>
   );
 }

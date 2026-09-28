@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#f7fdfa',
+  themeColor: '#fafaf8',
 };
 
 // Applies the saved theme before first paint to avoid a flash.
@@ -29,7 +29,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400..800&family=Amiri+Quran&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
         <link rel="preconnect" href="https://api.alquran.cloud" />
         <link rel="preconnect" href="https://cdn.islamic.network" />
       </head>

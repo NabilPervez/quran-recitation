@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { DisplayPrefs, SessionSettings, SurahInfo, Theme } from "@/types";
+import { DEFAULT_FONT_SCALES, FONT_LAYERS, FONT_SCALE_MAX, FONT_SCALE_MIN, FONT_SCALE_STEP, clampFontScale } from "@/lib/fonts";
 import { Minus, Plus } from "lucide-react";
 import type { FC, ReactNode } from "react";
 
@@ -176,16 +177,71 @@ export const DisplayOptions: FC<{ prefs: DisplayPrefs; onChange: (patch: Partial
       checked={prefs.testMode}
       onChange={(v) => onChange({ testMode: v })}
     />
-    <Field label="Text size" hint={`${Math.round(prefs.textScale * 100)}%`}>
-      <Chips
-        label="Text size"
-        options={[0.7, 0.85, 1, 1.25, 1.5].map((v) => ({ value: v, label: v === 1 ? "Fit" : `${Math.round(v * 100)}%` }))}
-        value={prefs.textScale}
-        onChange={(v) => onChange({ textScale: v })}
-      />
-    </Field>
+    <ReadingSize prefs={prefs} onChange={onChange} />
     <Field label="Theme">
       <Chips label="Theme" options={THEMES} value={prefs.theme} onChange={(v) => onChange({ theme: v })} />
     </Field>
   </div>
 );
+
+/** Per-layer reading size, as in Quran Reflection's "Reading Size" settings. */
+export const ReadingSize: FC<{ prefs: DisplayPrefs; onChange: (patch: Partial<DisplayPrefs>) => void }> = ({ prefs, onChange }) => {
+  const f = prefs.fontScales;
+  const changed = FONT_LAYERS.some(({ key }) => f[key] !== 1);
+  return (
+    <Field label="Reading size" hint="On top of auto-fit">
+      <div className="rounded-xl border bg-background p-4 text-center">
+        <p dir="rtl" lang="ar" className="arabic" style={{ fontSize: `${28 * f.arabic}px` }}>
+          قُلْ هُوَ ٱللَّهُ أَحَدٌ
+        </p>
+        <p className="italic text-muted-foreground" style={{ fontSize: `${15 * f.translit}px` }}>
+          Qul huwal laahu ahad
+        </p>
+        <p className="text-foreground/80" style={{ fontSize: `${16 * f.trans}px` }}>
+          Say, "He is Allah, [who is] One,
+        </p>
+      </div>
+      <div className="space-y-2 pt-1">
+        {FONT_LAYERS.map(({ key, label }) => {
+          const value = f[key];
+          const step = (dir: number) => onChange({ fontScales: { ...f, [key]: clampFontScale(value + dir * FONT_SCALE_STEP) } });
+          return (
+            <div key={key} className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium">{label}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label={`Decrease ${label.toLowerCase()} size`}
+                  disabled={value <= FONT_SCALE_MIN + 0.001}
+                  onClick={() => step(-1)}
+                  className="h-10 w-10 rounded-full border bg-card grid place-items-center text-sm font-semibold disabled:opacity-40 hover:bg-accent"
+                >
+                  A−
+                </button>
+                <span className="w-12 text-center text-sm font-semibold tabular-nums">{Math.round(value * 100)}%</span>
+                <button
+                  type="button"
+                  aria-label={`Increase ${label.toLowerCase()} size`}
+                  disabled={value >= FONT_SCALE_MAX - 0.001}
+                  onClick={() => step(1)}
+                  className="h-10 w-10 rounded-full border bg-card grid place-items-center text-base font-semibold disabled:opacity-40 hover:bg-accent"
+                >
+                  A+
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {changed && (
+          <button
+            type="button"
+            onClick={() => onChange({ fontScales: DEFAULT_FONT_SCALES })}
+            className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Reset sizes
+          </button>
+        )}
+      </div>
+    </Field>
+  );
+};
