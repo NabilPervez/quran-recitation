@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Alegreya', serif;
-}
 
 @layer base {
   :root {
@@ -41,6 +38,26 @@ body {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .sepia {
+    --background: 39 45% 90%;
+    --foreground: 30 35% 16%;
+    --card: 39 50% 94%;
+    --card-foreground: 30 35% 16%;
+    --popover: 39 50% 94%;
+    --popover-foreground: 30 35% 16%;
+    --primary: 28 55% 36%;
+    --primary-foreground: 39 60% 96%;
+    --secondary: 38 35% 84%;
+    --secondary-foreground: 30 35% 16%;
+    --muted: 38 35% 84%;
+    --muted-foreground: 30 20% 36%;
+    --accent: 38 35% 82%;
+    --accent-foreground: 30 35% 16%;
+    --border: 36 25% 76%;
+    --input: 36 25% 76%;
+    --ring: 28 55% 36%;
   }
 
   .dark {
@@ -84,7 +101,23 @@ body {
     @apply border-border;
   }
 
+  html,
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  .arabic {
+    font-family: 'Amiri Quran', 'Amiri', 'Scheherazade New', serif;
+    line-height: 1.9;
+    word-spacing: 0.08em;
+  }
+  .safe-pad {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 }

@@ -9,6 +9,10 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        // Phones held sideways: short viewport, so controls move to a side rail.
+        land: { raw: '(orientation: landscape) and (max-height: 600px)' },
+      },
       fontFamily: {
         body: ['Alegreya', 'serif'],
         headline: ['Alegreya', 'serif'],
