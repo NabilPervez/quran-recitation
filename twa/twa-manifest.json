@@ -1,0 +1,38 @@
+{
+  "packageId": "com.nabilpervez.ayahecho",
+  "host": "ayahecho.netlify.app",
+  "name": "Ayah Echo",
+  "launcherName": "Ayah Echo",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#fafaf8",
+  "navigationColor": "#fafaf8",
+  "navigationColorDark": "#fafaf8",
+  "navigationDividerColor": "#fafaf8",
+  "navigationDividerColorDark": "#fafaf8",
+  "backgroundColor": "#fafaf8",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://ayahecho.netlify.app/icons/icon-512.png",
+  "maskableIconUrl": "https://ayahecho.netlify.app/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./ayahecho-upload.keystore",
+    "alias": "upload"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://ayahecho.netlify.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://ayahecho.netlify.app/",
+  "minSdkVersion": 21
+}

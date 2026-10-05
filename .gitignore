@@ -45,3 +45,11 @@ firebase-debug.log
 firestore-debug.log
 .netlify
 out
+
+# Android signing keys - never commit
+*.keystore
+*.jks
+twa/app/
+twa/build/
+twa/*.aab
+twa/*.apk

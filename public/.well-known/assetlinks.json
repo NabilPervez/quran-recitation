@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.nabilpervez.ayahecho",
+      "sha256_cert_fingerprints": [
+        "3A:0F:A7:74:15:B7:1B:FC:F6:3C:3C:28:F3:02:FC:57:AA:E9:72:43:F3:DA:10:BA:12:5B:51:A0:BC:67:3E:66"
+      ]
+    }
+  }
+]
