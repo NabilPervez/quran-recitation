@@ -1,4 +1,4 @@
-# Ayah Echo – Google Play (TWA) checklist
+﻿# Ayah Echo – Google Play (TWA) checklist
 
 Package: `com.nabilpervez.ayahecho` · Site: https://ayahecho.netlify.app
 
@@ -15,7 +15,8 @@ Use package ID `com.nabilpervez.ayahecho`, the colours below, and keep the gener
 **Or with Bubblewrap** (needs a JDK + Android SDK, about 1 GB; keep them on D:):
 ```
 cd twa
-npx @bubblewrap/cli build
+npx @bubblewrap/cli update   # generates the Android project from twa-manifest.json
+npx @bubblewrap/cli build    # first run creates ayahecho-upload.keystore
 ```
 The first run asks to create `ayahecho-upload.keystore`. Back it up and never commit it.
 
@@ -27,5 +28,6 @@ Colours: theme `#fafaf8`, background `#fafaf8`.
 3. Put it in `public/.well-known/assetlinks.json` (replace the placeholder) and redeploy.
    Without this the app shows a browser URL bar at the top.
 4. Store listing: icon `public/icons/icon-512.png`, feature graphic `twa/feature-graphic.png`,
-   2–8 phone screenshots, privacy URL https://ayahecho.netlify.app/privacy.html.
+   phone screenshots in `twa/screenshots/` (1080×1920), privacy URL https://ayahecho.netlify.app/privacy.html.
 5. Data safety: "No data collected or shared" (everything is stored on device).
+
