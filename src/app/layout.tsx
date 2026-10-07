@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { SWRegister } from "@/components/sw-register"
 
 export const metadata: Metadata = {
   title: 'Ayah Echo',
   description: 'Memorise the Quran ayah by ayah through repetition',
+  icons: { icon: '/icons/favicon-48.png', apple: '/icons/apple-touch-icon.png' },
   appleWebApp: { capable: true, title: 'Ayah Echo', statusBarStyle: 'black-translucent' },
 };
 
@@ -37,6 +39,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
+        <SWRegister />
       </body>
     </html>
   );
